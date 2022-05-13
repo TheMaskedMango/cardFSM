@@ -1,0 +1,106 @@
+{
+    "states": [
+        {
+            "name": "initial",
+            "type": "initial"
+        },
+        {
+            "name": "backlog",
+            "type": "regular"
+        },
+        {
+            "name": "doing",
+            "type": "regular",
+            "actions": [
+                {
+                    "type": "entry",
+                    "body": "create branch"
+                },
+                {
+                    "type": "exit",
+                    "body": "submit PR"
+                }
+            ]
+        },
+        {
+            "name": "review",
+            "type": "regular",
+            "actions": [
+                {
+                    "type": "exit",
+                    "body": "merge PR to develop"
+                }
+            ]
+        },
+        {
+            "name": "QA",
+            "type": "regular"
+        },
+        {
+            "name": "done",
+            "type": "regular"
+        },
+        {
+            "name": "final",
+            "type": "final"
+        }
+    ],
+    "transitions": [
+        {
+            "from": "initial",
+            "to": "backlog"
+        },
+        {
+            "from": "backlog",
+            "to": "doing",
+            "label": "pull",
+            "event": "pull"
+        },
+        {
+            "from": "doing",
+            "to": "review",
+            "label": "functionality built",
+            "event": "functionality built"
+        },
+        {
+            "from": "review",
+            "to": "doing",
+            "label": "[code quality not ok]",
+            "cond": "code quality not ok"
+        },
+        {
+            "from": "review",
+            "to": "QA",
+            "label": "[code quality ok]",
+            "cond": "code quality ok"
+        },
+        {
+            "from": "review",
+            "to": "QA",
+            "label": "[code has minor issues]/\n  create tech debt item",
+            "cond": "code has minor issues"
+        },
+        {
+            "from": "QA",
+            "to": "doing",
+            "label": "[not acceptable]",
+            "cond": "not acceptable"
+        },
+        {
+            "from": "QA",
+            "to": "done",
+            "label": "[ok but issue(s) found]/\n  create bug(s)",
+            "cond": "ok but issue(s) found"
+        },
+        {
+            "from": "QA",
+            "to": "done",
+            "label": "[okie dokie]",
+            "cond": "okie dokie"
+        },
+        {
+            "from": "done",
+            "to": "final"
+        }
+    ]
+}

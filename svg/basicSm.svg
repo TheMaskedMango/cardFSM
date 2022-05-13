@@ -1,0 +1,52 @@
+<!DOCTYPE svg [<!ENTITY nbsp "&#160;">]><svg width="100%" height="100%" viewBox="0.00 0.00 206.34 44.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 40)">
+<title>state transitions</title>
+<polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-40 202.337,-40 202.337,4 -4,4"></polygon>
+<!-- initial -->
+<g id="node1" class="node state initial">
+<title>initial</title>
+<ellipse fill="#000000" stroke="#000000" stroke-width="2" cx="5.5" cy="-18" rx="5.5" ry="5.5"></ellipse>
+</g>
+<!-- A -->
+<g id="node2" class="node state regular">
+<title>A</title>
+<polygon fill="#ffffff" fill-opacity="0.003922" stroke="transparent" stroke-width="2" points="85.779,-36 29.779,-36 29.779,0 85.779,0 85.779,-36"></polygon>
+<text text-anchor="start" x="53.7776" y="-14.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">A</text>
+<path fill="none" stroke="#000000" stroke-width="2" d="M42.1123,-1C42.1123,-1 73.4457,-1 73.4457,-1 79.1123,-1 84.779,-6.6667 84.779,-12.3333 84.779,-12.3333 84.779,-23.6667 84.779,-23.6667 84.779,-29.3333 79.1123,-35 73.4457,-35 73.4457,-35 42.1123,-35 42.1123,-35 36.4457,-35 30.779,-29.3333 30.779,-23.6667 30.779,-23.6667 30.779,-12.3333 30.779,-12.3333 30.779,-6.6667 36.4457,-1 42.1123,-1"></path>
+</g>
+<!-- initial&#45;&gt;A -->
+<g id="edge1" class="edge transition">
+<title>initial-&gt;A</title>
+<path fill="none" stroke="#000000" d="M11.0948,-18C13.3601,-18 16.1815,-18 19.3084,-18"></path>
+<polygon fill="#000000" stroke="#000000" points="19.3543,-21.5001 29.3543,-18 19.3542,-14.5001 19.3543,-21.5001"></polygon>
+<text text-anchor="middle" x="20.3895" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+</g>
+<!-- B -->
+<g id="node3" class="node state regular">
+<title>B</title>
+<polygon fill="#ffffff" fill-opacity="0.003922" stroke="transparent" stroke-width="2" points="160.558,-36 104.558,-36 104.558,0 160.558,0 160.558,-36"></polygon>
+<text text-anchor="start" x="128.5566" y="-14.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">B</text>
+<path fill="none" stroke="#000000" stroke-width="2" d="M116.8913,-1C116.8913,-1 148.2247,-1 148.2247,-1 153.8913,-1 159.558,-6.6667 159.558,-12.3333 159.558,-12.3333 159.558,-23.6667 159.558,-23.6667 159.558,-29.3333 153.8913,-35 148.2247,-35 148.2247,-35 116.8913,-35 116.8913,-35 111.2247,-35 105.558,-29.3333 105.558,-23.6667 105.558,-23.6667 105.558,-12.3333 105.558,-12.3333 105.558,-6.6667 111.2247,-1 116.8913,-1"></path>
+</g>
+<!-- A&#45;&gt;B -->
+<g id="edge2" class="edge transition">
+<title>A-&gt;B</title>
+<path fill="none" stroke="#000000" d="M86.0497,-18C88.6554,-18 91.324,-18 94.0005,-18"></path>
+<polygon fill="#000000" stroke="#000000" points="94.2473,-21.5001 104.2473,-18 94.2473,-14.5001 94.2473,-21.5001"></polygon>
+<text text-anchor="middle" x="95.1685" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+</g>
+<!-- final -->
+<g id="node4" class="node state final">
+<title>final</title>
+<ellipse fill="#000000" stroke="#000000" stroke-width="2" cx="188.837" cy="-18" rx="5.5" ry="5.5"></ellipse>
+<ellipse fill="none" stroke="#000000" stroke-width="2" cx="188.837" cy="-18" rx="9.5" ry="9.5"></ellipse>
+</g>
+<!-- B&#45;&gt;final -->
+<g id="edge3" class="edge transition">
+<title>B-&gt;final</title>
+<path fill="none" stroke="#000000" d="M160.6975,-18C163.5262,-18 166.3549,-18 169.0693,-18"></path>
+<polygon fill="#000000" stroke="#000000" points="169.2901,-21.5001 179.29,-18 169.29,-14.5001 169.2901,-21.5001"></polygon>
+<text text-anchor="middle" x="169.9475" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+</g>
+</g>
+</svg>

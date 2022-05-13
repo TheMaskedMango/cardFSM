@@ -1,0 +1,100 @@
+<!DOCTYPE svg [<!ENTITY nbsp "&#160;">]><svg width="100%" height="186pt" viewBox="0.00 0.00 587.48 186.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<script xlink:href="svgScript.js"></script>
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 182)">
+<title>state transitions</title>
+<polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-182 583.478,-182 583.478,4 -4,4"></polygon>
+<g id="clust1" class="cluster state regular">
+<title>cluster_running</title>
+<path fill="none" stroke="#000000" stroke-width="2" d="M168.455,-8C168.455,-8 494.137,-8 494.137,-8 500.137,-8 506.137,-14 506.137,-20 506.137,-20 506.137,-158 506.137,-158 506.137,-164 500.137,-170 494.137,-170 494.137,-170 168.455,-170 168.455,-170 162.455,-170 156.455,-164 156.455,-158 156.455,-158 156.455,-20 156.455,-20 156.455,-14 162.455,-8 168.455,-8"></path>
+<text text-anchor="start" x="311.2902" y="-151.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">running</text>
+</g>
+<!-- initial -->
+<g id="node1" class="node state initial">
+<title>initial</title>
+<ellipse fill="#000000" stroke="#000000" stroke-width="2" cx="35.5" cy="-114" rx="5.5" ry="5.5"></ellipse>
+</g>
+<!-- washing -->
+<g id="node5" class="node state regular">
+<title>washing</title>
+<polygon fill="#ffffff" fill-opacity="0.003922" stroke="transparent" stroke-width="2" points="230.455,-132 164.455,-132 164.455,-96 230.455,-96 230.455,-132"></polygon>
+<text text-anchor="start" x="175.4506" y="-110.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">washing</text>
+<path fill="none" stroke="#000000" stroke-width="2" d="M176.7883,-97C176.7883,-97 218.1217,-97 218.1217,-97 223.7883,-97 229.455,-102.6667 229.455,-108.3333 229.455,-108.3333 229.455,-119.6667 229.455,-119.6667 229.455,-125.3333 223.7883,-131 218.1217,-131 218.1217,-131 176.7883,-131 176.7883,-131 171.1217,-131 165.455,-125.3333 165.455,-119.6667 165.455,-119.6667 165.455,-108.3333 165.455,-108.3333 165.455,-102.6667 171.1217,-97 176.7883,-97"></path>
+</g>
+<!-- initial&#45;&gt;washing -->
+<g id="edge1" class="edge transition">
+<title>initial-&gt;washing</title>
+<path fill="none" stroke="#000000" d="M41.2641,-114C59.0579,-114 114.3167,-114 154.0579,-114"></path>
+<polygon fill="#000000" stroke="#000000" points="154.3024,-117.5001 164.3024,-114 154.3024,-110.5001 154.3024,-117.5001"></polygon>
+<text text-anchor="middle" x="113.7275" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> </text>
+</g>
+<!-- power off -->
+<g id="node2" class="node state regular">
+<title>power off</title>
+<polygon fill="#ffffff" fill-opacity="0.003922" stroke="transparent" stroke-width="2" points="71,-55 0,-55 0,-19 71,-19 71,-55"></polygon>
+<text text-anchor="start" x="11.3274" y="-33.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">power off</text>
+<path fill="none" stroke="#000000" stroke-width="2" d="M12.3333,-20C12.3333,-20 58.6667,-20 58.6667,-20 64.3333,-20 70,-25.6667 70,-31.3333 70,-31.3333 70,-42.6667 70,-42.6667 70,-48.3333 64.3333,-54 58.6667,-54 58.6667,-54 12.3333,-54 12.3333,-54 6.6667,-54 1,-48.3333 1,-42.6667 1,-42.6667 1,-31.3333 1,-31.3333 1,-25.6667 6.6667,-20 12.3333,-20"></path>
+</g>
+<!-- running.history -->
+<g id="node8" class="node state history">
+<title>running.history</title>
+<ellipse fill="#ffffff" fill-opacity="0.003922" stroke="#000000" stroke-width="2" cx="197.455" cy="-56" rx="18" ry="18"></ellipse>
+<text text-anchor="middle" x="197.455" y="-52.4" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">H</text>
+</g>
+<!-- power off&#45;&gt;running.history -->
+<g id="edge3" class="edge transition">
+<title>power off-&gt;running.history</title>
+<path fill="none" stroke="#000000" d="M71.0417,-41.1696C100.6343,-44.6413 142.1964,-49.5173 169.4663,-52.7165"></path>
+<polygon fill="#000000" stroke="#000000" points="169.1693,-56.2055 179.5091,-53.8946 169.985,-49.2532 169.1693,-56.2055"></polygon>
+<text text-anchor="start" x="79" y="-53" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">restore power &nbsp;&nbsp;</text>
+</g>
+<!-- final -->
+<g id="node3" class="node state final">
+<title>final</title>
+<ellipse fill="#000000" stroke="#000000" stroke-width="2" cx="569.978" cy="-114" rx="5.5" ry="5.5" onclick="test"></ellipse>
+<ellipse fill="none" stroke="#000000" stroke-width="2" cx="569.978" cy="-114" rx="9.5" ry="9.5"></ellipse>
+</g>
+<!-- running -->
+<!-- running&#45;&gt;power off -->
+<g id="edge2" class="edge transition">
+<title>running-&gt;power off</title>
+<path fill="none" stroke="#000000" d="M156.4552,-17.9319C135.1116,-19.353 107.927,-21.7799 81.126,-25.8827"></path>
+<polygon fill="#000000" stroke="#000000" points="80.3223,-22.467 71.0088,-27.5176 81.4391,-29.3774 80.3223,-22.467"></polygon>
+<text text-anchor="start" x="87.6085" y="-29" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">power out &nbsp;&nbsp;</text>
+</g>
+<!-- rinsing -->
+<g id="node6" class="node state regular">
+<title>rinsing</title>
+<polygon fill="#ffffff" fill-opacity="0.003922" stroke="transparent" stroke-width="2" points="359.796,-132 302.796,-132 302.796,-96 359.796,-96 359.796,-132"></polygon>
+<text text-anchor="start" x="314.1296" y="-110.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">rinsing</text>
+<path fill="none" stroke="#000000" stroke-width="2" d="M315.1293,-97C315.1293,-97 347.4627,-97 347.4627,-97 353.1293,-97 358.796,-102.6667 358.796,-108.3333 358.796,-108.3333 358.796,-119.6667 358.796,-119.6667 358.796,-125.3333 353.1293,-131 347.4627,-131 347.4627,-131 315.1293,-131 315.1293,-131 309.4627,-131 303.796,-125.3333 303.796,-119.6667 303.796,-119.6667 303.796,-108.3333 303.796,-108.3333 303.796,-102.6667 309.4627,-97 315.1293,-97"></path>
+</g>
+<!-- washing&#45;&gt;rinsing -->
+<g id="edge4" class="edge transition">
+<title>washing-&gt;rinsing</title>
+<path fill="none" stroke="#000000" d="M230.5393,-114C249.3059,-114 272.8901,-114 292.5223,-114"></path>
+<polygon fill="#000000" stroke="#000000" points="292.6736,-117.5001 302.6736,-114 292.6735,-110.5001 292.6736,-117.5001"></polygon>
+<text text-anchor="start" x="247.455" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">20 min &nbsp;&nbsp;</text>
+</g>
+<!-- spinning -->
+<g id="node7" class="node state regular">
+<title>spinning</title>
+<polygon fill="#ffffff" fill-opacity="0.003922" stroke="transparent" stroke-width="2" points="498.137,-132 432.137,-132 432.137,-96 498.137,-96 498.137,-132"></polygon>
+<text text-anchor="start" x="442.7972" y="-110.2" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#000000">spinning</text>
+<path fill="none" stroke="#000000" stroke-width="2" d="M444.4703,-97C444.4703,-97 485.8037,-97 485.8037,-97 491.4703,-97 497.137,-102.6667 497.137,-108.3333 497.137,-108.3333 497.137,-119.6667 497.137,-119.6667 497.137,-125.3333 491.4703,-131 485.8037,-131 485.8037,-131 444.4703,-131 444.4703,-131 438.8037,-131 433.137,-125.3333 433.137,-119.6667 433.137,-119.6667 433.137,-108.3333 433.137,-108.3333 433.137,-102.6667 438.8037,-97 444.4703,-97"></path>
+</g>
+<!-- rinsing&#45;&gt;spinning -->
+<g id="edge5" class="edge transition">
+<title>rinsing-&gt;spinning</title>
+<path fill="none" stroke="#000000" d="M360.0083,-114C377.9303,-114 401.3506,-114 421.5358,-114"></path>
+<polygon fill="#000000" stroke="#000000" points="421.7503,-117.5001 431.7503,-114 421.7502,-110.5001 421.7503,-117.5001"></polygon>
+<text text-anchor="start" x="376.796" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">20 min &nbsp;&nbsp;</text>
+</g>
+<!-- spinning&#45;&gt;final -->
+<g id="edge6" class="edge transition">
+<title>spinning-&gt;final</title>
+<path fill="none" stroke="#000000" d="M498.3093,-114C515.1611,-114 535.0946,-114 549.6558,-114"></path>
+<polygon fill="#000000" stroke="#000000" points="550.0203,-117.5001 560.0203,-114 550.0203,-110.5001 550.0203,-117.5001"></polygon>
+<text text-anchor="start" x="514.137" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">20 min &nbsp;&nbsp;</text>
+</g>
+</g>
+</svg>
