@@ -18,6 +18,11 @@ svg{
     transform: translate(-50%, -50%);
 }
 
+#empty{
+    text-align: center;
+    vertical-align: middle;
+}
+
 body button{
     position:absolute;
     border-radius: 50%;

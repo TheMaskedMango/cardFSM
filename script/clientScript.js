@@ -51,6 +51,11 @@ $(document).ready(function(){
    
    
           console.log($(".state",svgRoot));
+          if($(".state",svgRoot).length) {
+              $("#empty").css("display","none");
+          }else{
+              $("#empty").css("display","");
+          }
    
    
           $(".state.regular polygon",svgRoot).click(function() {//Listeners states

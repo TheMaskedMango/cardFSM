@@ -7,7 +7,21 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 
-var diagJSON;
+var diagJSON={
+  "states": [
+    { 
+    "name": "initial",
+    "type": "initial",
+    },
+    { 
+      "name": "skinny",
+      "type": "regular",
+    },
+  ],
+  "transitions": [
+
+  ]
+};
 
 
 app.use(express.static(__dirname + '/public'));
@@ -30,6 +44,7 @@ io.on('connection', (socket) => {
 
   socket.on('rename', (rename) => {
     console.log('name to change: ' + rename[0]+" with: "+ rename[1]);
+    renameS(rename, socket);
   });
 
 
@@ -41,30 +56,19 @@ server.listen(3000, () => {
 
 
 function renderFromJSON(dir, socket){
-  fs.readFile(__dirname + "/diagramme.json", (error, data) => {
-      if(error) {
-          throw error;
-      }
-      diagJSON=JSON.parse(data.toString());
-      renderSVG(diagJSON,dir, socket);;
-  });
+    renderSVG(diagJSON, dir, socket);
 }
 
 
 function renderSVG(source, dir, socket){
-  
-
   try {
       const lSVGInAString = smcat.render(source,{inputType: "json",outputType: "svg", direction: dir});
-      //console.log('Le SVG a été créé avec succès');
       socket.emit("svg",lSVGInAString);
-      //fs.writeFile('diagramme.svg', lSVGInAString, function (err) {
-      //    if (err) throw err;
-      //    console.log('File is created successfully.');
-      //});
   } catch (pError) {
       console.error(pError);
   }
+}
 
-
+function renameS(names, socket){
+  
 }
