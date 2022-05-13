@@ -4,7 +4,7 @@ var group;
 var diagDirection = 0;
 
 $(document).ready(function(){
-   init();
+   linkSVG();
 })
 
 function toggleSelectedState(elem, color) {
@@ -59,7 +59,7 @@ function load_diagram(source, orientation = "top-bottom")
       $("body").append(newScriptTag);  
    }
 
-function init(){
+function linkSVG(){
  //Wait until the svg loads
  var checkExist = setInterval(function() {
     if ($('svg').length==2) {

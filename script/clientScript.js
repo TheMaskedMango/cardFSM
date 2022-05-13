@@ -9,7 +9,7 @@ function changeDirection(){
         direction = "left-right";
     }
     socket.emit('direction',direction );
-    init();
+    linkSVG();
 }
 
 socket.on('svg', (svg) => {//Listening on socket
@@ -20,6 +20,7 @@ function renderSVG(socket, svgString){//Parse the svg then displays it
     parser = new DOMParser();
     xmlDoc = parser.parseFromString(svgString, "image/svg+xml");
     displaySVG(xmlDoc);
+    linkSVG();
 }
 
 function displaySVG(xmlDoc){
@@ -31,10 +32,10 @@ function displaySVG(xmlDoc){
 }
 
 $(document).ready(function(){
-    init();
+    linkSVG();
  })
 
- function init(){
+ function linkSVG(){
     //Wait until the svg loads
     var checkExist = setInterval(function() {
        if ($('svg').length) {
@@ -87,6 +88,7 @@ function resetSelected(){//Remove any selected element state
 function toggleSelectedState(elem, color) {
     console.log(elem);
     if(elem.parent().hasClass("selected")){
+        console.log("HAHAHAHAH");
         $("#rename").css("display","none");
         elem.parent().children("path").attr("stroke","black");
         elem.parent().removeClass("selected");
