@@ -68,13 +68,17 @@ io.on('connection', (socket) => {
     console.log(selectedElements);
   });
 
+  socket.on('deselected_all', () => {
+    selectedElements = [];
+  });
+
 
 });
 
 ///////////////////////////////
 //LISTEN FOR PHYSICAL ACTIONS//
 ///////////////////////////////
-app.post('/etat', (req, res) => {
+app.post('/etat', (req, res) => {//Ajout d'état
   const { name, type } = req.body;
 
   if (name && type) {
@@ -86,6 +90,17 @@ app.post('/etat', (req, res) => {
   }
 });
 
+app.post('/transition', (req, res) => {//Ajout de transition
+  const { from, to } = req.body;
+
+  if (from && to) {
+    addTransition(from, to);
+    console.log(diagJSON);
+    res.send("la transition a été ajoutée");
+  } else {
+    res.status(400).send("La transition n'est pas valide"); 
+  }
+});
 
 /////////////////////////
 //SERVER-SIDE FUNCTIONS//
@@ -99,12 +114,21 @@ function renderSVG(source, socket = io.sockets){
   }
 }
 
-function addState(name, type, socket){
+function addState(name, type){
   let obj = {
      name: name,
      type: type
   }
   diagJSON["states"].push(obj); 
+  renderSVG(diagJSON);
+}
+
+function addTransition(from, to){
+  let obj = {
+     from: from,
+     to: to
+  }
+  diagJSON["transitions"].push(obj); 
   renderSVG(diagJSON);
 }
 

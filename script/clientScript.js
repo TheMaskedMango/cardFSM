@@ -72,6 +72,7 @@ $(document).ready(function(){
    }
 
 function resetSelected(){//Remove any selected element state
+    deselect();
     $(".state, .transition",svgRoot).removeClass("selected");
     $(".state, .transition",svgRoot).children("path").attr("stroke","black");
     $(".state, .transition",svgRoot).children("polygon").attr("fill","black");
@@ -107,8 +108,14 @@ function select(elem){
 
 //Send the name to deselect to the server which removes it from its array
 function deselect(elem){
-    let name = elem.parent().children("title").html();
-    socket.emit('deselected_name',name);
+    if(elem==undefined){
+        socket.emit('deselected_all');
+        console.log("siuuu");
+    }else{
+        let name = elem.parent().children("title").html();
+        socket.emit('deselected_name',name);
+    }
+
 }
 
 function rename(){
