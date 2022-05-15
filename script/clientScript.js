@@ -2,15 +2,6 @@
 var socket = io();
 var direction = "left-right";
 
-function changeDirection(){
-    if(direction == "left-right"){
-        direction="top-bottom";
-    }else{
-        direction = "left-right";
-    }
-    socket.emit('direction',direction );
-    linkSVG();
-}
 
 socket.on('svg', (svg) => {//Listening on socket
     renderSVG(socket,svg);
@@ -32,8 +23,8 @@ function displaySVG(xmlDoc){
 }
 
 $(document).ready(function(){
-    linkSVG();
- })
+    //linkSVG();
+ });
 
  function linkSVG(){
     //Wait until the svg loads
@@ -51,19 +42,20 @@ $(document).ready(function(){
           $("#rename").css("display","none");
    
    
-          console.log($(".state",svgRoot));
+          //console.log($(".state",svgRoot));
           if($(".state",svgRoot).length) {
               $("#empty").css("display","none");
           }else{
               $("#empty").css("display","");
           }
    
-   
+          $(".state.regular polygon",svgRoot).off();//Remove previous listeners
           $(".state.regular polygon",svgRoot).click(function() {//Listeners states
               console.log($(this).parent().children("title").html());
               toggleSelectedState($(this),"blue");
           });
-   
+          
+          $(".transition polygon",svgRoot).off();
           $(".transition polygon",svgRoot).click(function() {//Listeners transitions
               stateArray = $(this).parent().children("title").html().split("-&gt;");
               console.log("source: "+stateArray[0]+"  destination: "+stateArray[1]);
@@ -86,18 +78,37 @@ function resetSelected(){//Remove any selected element state
 }   
 
 function toggleSelectedState(elem, color) {
-    console.log(elem);
+    //console.log(elem);
     if(elem.parent().hasClass("selected")){
-        console.log("HAHAHAHAH");
+        console.log("déselectionné");
         $("#rename").css("display","none");
         elem.parent().children("path").attr("stroke","black");
         elem.parent().removeClass("selected");
+        deselect(elem);
     }else{
-        $("#rename").css("display","");
+        console.log("selectionné");
         resetSelected();
+        $("#rename").css("display","");
         elem.parent().children("path").attr("stroke",color);
         elem.parent().addClass("selected");
+        select(elem);
     }
+}
+
+////////////////////////
+//SERVER COMMUNICATING//
+////////////////////////
+
+//Send the selected name to the server which saves it in an array
+function select(elem){
+    let name = elem.parent().children("title").html();
+    socket.emit('selected_name',name);
+}
+
+//Send the name to deselect to the server which removes it from its array
+function deselect(elem){
+    let name = elem.parent().children("title").html();
+    socket.emit('deselected_name',name);
 }
 
 function rename(){
@@ -109,5 +120,15 @@ function rename(){
         rename[1]=newName;
         socket.emit('rename',rename);
     }
+    linkSVG();
+}
 
+function changeDirection(){
+    if(direction == "left-right"){
+        direction="top-bottom";
+    }else{
+        direction = "left-right";
+    }
+    socket.emit('direction',direction );
+    linkSVG();
 }

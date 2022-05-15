@@ -9,6 +9,7 @@ const { Server } = require("socket.io");
 const io = new Server(server);
 
 var direction;
+var selectedElements = Array();
 var diagJSON={//JSON used to render the svg
   "states": [
     { 
@@ -56,6 +57,18 @@ io.on('connection', (socket) => {
     console.log('name to change: ' + rename[0]+" with: "+ rename[1]);
     renameS(rename);
   });
+
+  socket.on('selected_name', (name) => {
+    selectedElements.push(name);
+    console.log(selectedElements);
+  });
+
+  socket.on('deselected_name', (name) => {
+    selectedElements.pop(name);
+    console.log(selectedElements);
+  });
+
+
 });
 
 ///////////////////////////////
