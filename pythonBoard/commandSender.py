@@ -9,9 +9,9 @@ urlTransi = 'http://localhost:3000/transition'
 while TRUE:
     action = input("Ajouter un état [1], une transition [2]: ")
     if action=="1":
-        name = input("Ajoute un état, son nom: ")
-        type = input("son type (regular, initial, final): ")
-        etat = {'name': name, 'type': type}
+        #name = input("Ajoute un état, son nom: ")
+        #type = input("son type (regular, initial, final): ")
+        etat = {'name': "placeholder", 'type': "regular"}
 
         r = requests.post(urlEtat, data=etat)
         print(r.text)

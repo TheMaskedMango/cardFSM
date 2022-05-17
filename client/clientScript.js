@@ -1,6 +1,7 @@
 
 var socket = io();
-var direction = "left-right";
+var direction = "top-bottom";//demande au serv bouffon
+var selectedType;
 
 
 socket.on('svg', (svg) => {//Listening on socket
@@ -49,13 +50,13 @@ $(document).ready(function(){
               $("#empty").css("display","");
           }
    
-          $(".state.regular polygon",svgRoot).off();//Remove previous listeners
+          clearListeners();
           $(".state.regular polygon",svgRoot).click(function() {//Listeners states
               console.log($(this).parent().children("title").html());
               toggleSelectedState($(this),"blue");
           });
           
-          $(".transition polygon",svgRoot).off();
+          
           $(".transition polygon",svgRoot).click(function() {//Listeners transitions
               stateArray = $(this).parent().children("title").html().split("-&gt;");
               console.log("source: "+stateArray[0]+"  destination: "+stateArray[1]);
@@ -68,7 +69,7 @@ $(document).ready(function(){
            console.log("Chargement du diagramme..")
        }
     }, 100);
-   //the svg doc is loaded asynchronously
+   //the svg doc is loaded asynchronouslys
    }
 
 function resetSelected(){//Remove any selected element state
@@ -76,6 +77,7 @@ function resetSelected(){//Remove any selected element state
     $(".state, .transition",svgRoot).removeClass("selected");
     $(".state, .transition",svgRoot).children("path").attr("stroke","black");
     $(".state, .transition",svgRoot).children("polygon").attr("fill","black");
+    $(".transition",svgRoot).children("polygon").attr("stroke","black");
 }   
 
 function toggleSelectedState(elem, color) {
@@ -90,10 +92,35 @@ function toggleSelectedState(elem, color) {
         console.log("selectionné");
         resetSelected();
         $("#rename").css("display","");
-        elem.parent().children("path").attr("stroke",color);
+        colorState(elem);
         elem.parent().addClass("selected");
-        select(elem);
+        select(elem,"state");
     }
+}
+
+function toggleSelectedTransition(elem, states) {
+    if(elem.parent().hasClass("selected")){//If already selected
+        elem.parent().children("path").attr("stroke","black");
+        elem.parent().children("polygon").attr("fill","black");
+        elem.parent().children("polygon").attr("stroke","black");
+        elem.parent().removeClass("selected");
+    }else{
+        resetSelected();
+        $("#rename").css("display","");
+        colorTransition(elem);
+        elem.parent().addClass("selected");
+        select(elem,"transition");
+    }
+}
+
+function colorState(elem,color="blue"){
+    elem.parent().children("path").attr("stroke",color);
+}
+
+function colorTransition(elem,color="red"){
+    elem.parent().children("path").attr("stroke","red");
+    elem.parent().children("polygon").attr("fill","red");
+    elem.parent().children("polygon").attr("stroke","red");
 }
 
 ////////////////////////
@@ -101,16 +128,16 @@ function toggleSelectedState(elem, color) {
 ////////////////////////
 
 //Send the selected name to the server which saves it in an array
-function select(elem){
+function select(elem, type){
     let name = elem.parent().children("title").html();
     socket.emit('selected_name',name);
+    selectedType = type;
 }
 
 //Send the name to deselect to the server which removes it from its array
 function deselect(elem){
     if(elem==undefined){
         socket.emit('deselected_all');
-        console.log("siuuu");
     }else{
         let name = elem.parent().children("title").html();
         socket.emit('deselected_name',name);
@@ -118,24 +145,46 @@ function deselect(elem){
 
 }
 
-function rename(){
-    let oldName = $(".selected").children("title").html()
-    let newName = prompt("Nom de l'état",oldName);
-    if(oldName!=newName && newName!==null){
-        let rename = Array();
-        rename[0]=oldName;
-        rename[1]=newName;
-        socket.emit('rename',rename);
+function rename(){//Condition sur l'élément selectionné
+    console.log($(".selected"));
+    let oldName;
+    let newName;
+    if(selectedType=="state"){
+        oldName = $(".selected").children("title").html()
+        newName = prompt("Nouveau nom de l'état",oldName);
+        if(oldName!=newName && newName!==null){
+            let rename = Array();
+            rename[0]=oldName;
+            rename[1]=newName;
+            socket.emit('rename',rename, "state");
+            linkSVG();
+        }else{
+            resetSelected();
+        }
+    }else if(selectedType=="transition"){
+        oldName = $(".selected").children("text").html();
+        newName = prompt("Nouveau nom de la transition",oldName.replace(/&nbsp;/g, ''));
+        if(oldName!=newName && newName!==null){
+            let rename = Array();
+            rename[0]=oldName;
+            rename[1]=newName;
+            socket.emit('rename',rename, "transition");
+            linkSVG();
+        }else{
+            resetSelected();
+        }
     }
-    linkSVG();
+
+
+}
+
+function clearListeners(){//Remove the click listeners to free memory
+    $(".state.regular polygon",svgRoot).off();//Remove previous listeners
+    $(".transition polygon",svgRoot).off();
 }
 
 function changeDirection(){
-    if(direction == "left-right"){
-        direction="top-bottom";
-    }else{
-        direction = "left-right";
-    }
-    socket.emit('direction',direction );
+    clearListeners();
+    socket.emit('direction');
     linkSVG();
 }
