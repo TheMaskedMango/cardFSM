@@ -1,5 +1,4 @@
 from pickle import TRUE
-import requests 
 import requests
 
 urlEtat = 'http://localhost:3000/etat'
@@ -23,7 +22,3 @@ while TRUE:
 
         r = requests.post(urlTransi, data=transition)
         print(r.text)
-
-
-
-

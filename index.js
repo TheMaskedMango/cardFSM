@@ -10,192 +10,30 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-
+var SVG_String;
 var direction = 'left-right';
 var selectedElements = Array();
-var stateNumber=1;
+var stateNumber='a';
 var stateNames=Array();//Faire plutôt une map avec nom : idCarte
 var transitionNames=Array();
+
+var knownCards= new Map([["carte état initial","initial"]]);
+
 var diagJSON=//JSON used to render the svg
 {
   "transitions": [
       {
-          "from": "closed",
-          "to": "syn_sent",
-          "label": "Active open/ SYN",
-          "event": "Active open",
-          "action": "SYN"
-      },
-      {
-          "from": "closed",
-          "to": "listen",
-          "label": "Passive open",
-          "event": "Passive open"
-      },
-      {
-          "from": "initial",
-          "to": "closed"
-      },
-      {
-          "from": "listen",
-          "to": "closed",
-          "label": "Close",
-          "event": "Close"
-      },
-      {
-          "from": "listen",
-          "to": "syn_sent",
-          "label": "Send/ SYN",
-          "event": "Send",
-          "action": "SYN"
-      },
-      {
-          "from": "listen",
-          "to": "syn_rcvd",
-          "label": "SYN/ SYN + ACK",
-          "event": "SYN",
-          "action": "SYN + ACK"
-      },
-      {
-          "from": "syn_sent",
-          "to": "closed",
-          "label": "Close",
-          "event": "Close"
-      },
-      {
-          "from": "syn_sent",
-          "to": "syn_rcvd",
-          "label": "SYN/ SYN + ACK",
-          "event": "SYN",
-          "action": "SYN + ACK"
-      },
-      {
-          "from": "syn_sent",
-          "to": "established",
-          "label": "SYN + ACK/ ACK",
-          "event": "SYN + ACK",
-          "action": "ACK"
-      },
-      {
-          "from": "syn_rcvd",
-          "to": "established",
-          "label": "ACK",
-          "event": "ACK"
-      },
-      {
-          "from": "syn_rcvd",
-          "to": "fin_wait_1",
-          "label": "Close/ FIN",
-          "event": "Close",
-          "action": "FIN"
-      },
-      {
-          "from": "established",
-          "to": "fin_wait_1",
-          "label": "Close/ FIN",
-          "event": "Close",
-          "action": "FIN"
-      },
-      {
-          "from": "established",
-          "to": "close_wait",
-          "label": "FIN/ ACK",
-          "event": "FIN",
-          "action": "ACK"
-      },
-      {
-          "from": "fin_wait_1",
-          "to": "fin_wait_2",
-          "label": "ACK",
-          "event": "ACK"
-      },
-      {
-          "from": "fin_wait_1",
-          "to": "closing",
-          "label": "FIN/ ACK",
-          "event": "FIN",
-          "action": "ACK"
-      },
-      {
-          "from": "fin_wait_2",
-          "to": "time_wait",
-          "label": "FIN/ ACK",
-          "event": "FIN",
-          "action": "ACK"
-      },
-      {
-          "from": "closing",
-          "to": "time_wait",
-          "label": "ACK",
-          "event": "ACK"
-      },
-      {
-          "from": "time_wait",
-          "to": "closed",
-          "label": "timeout after two segment lifetimes",
-          "event": "timeout after two segment lifetimes"
-      },
-      {
-          "from": "close_wait",
-          "to": "last_ack",
-          "label": "Close/ FIN",
-          "event": "Close",
-          "action": "FIN"
-      },
-      {
-          "from": "last_ack",
-          "to": "closed",
-          "label": "ACK",
-          "event": "ACK"
+          "from":"initial",
+          "to":"ok"
       }
   ],
   "states": [
-      {
-          "name": "closed",
-          "type": "regular"
-      },
-      {
-          "name": "syn_sent",
-          "type": "regular"
-      },
-      {
-          "name": "listen",
-          "type": "regular"
-      },
       {
           "name": "initial",
           "type": "initial"
       },
       {
-          "name": "syn_rcvd",
-          "type": "regular"
-      },
-      {
-          "name": "established",
-          "type": "regular"
-      },
-      {
-          "name": "fin_wait_1",
-          "type": "regular"
-      },
-      {
-          "name": "close_wait",
-          "type": "regular"
-      },
-      {
-          "name": "fin_wait_2",
-          "type": "regular"
-      },
-      {
-          "name": "closing",
-          "type": "regular"
-      },
-      {
-          "name": "time_wait",
-          "type": "regular"
-      },
-      {
-          "name": "last_ack",
+          "name": "ok",
           "type": "regular"
       }
   ]
@@ -266,6 +104,23 @@ app.post('/etat', (req, res) => {//Ajout d'état
   }
 });
 
+app.post('/etat1', (req, res) => {//Carte posée sur le slot état 1
+  const { cardID} = req.body;
+  console.log(req.body);
+  if (cardID) {
+    if(knownCards.has(cardID)){
+      res.send("l'état existe déjà");
+    }else{
+      addState(cardID, 'regular');
+      res.send("l'état a été ajouté");
+    }
+    blink(cardID);
+
+  } else {
+    res.status(400).send('Il faut donner le type et le nom'); 
+  }
+});
+
 app.post('/transition', (req, res) => {//Ajout de transition
   const { from, to } = req.body;
 
@@ -281,25 +136,33 @@ app.post('/transition', (req, res) => {//Ajout de transition
 /////////////////////////
 //SERVER-SIDE FUNCTIONS//
 /////////////////////////
+
+function blink(cardID){
+  //name = 
+}
+
 function renderSVG(source, socket = io.sockets){
   try {
-      const lSVGInAString = smcat.render(source,{inputType: "json",outputType: "svg", direction: direction});
-      socket.emit("svg",lSVGInAString);
+      SVG_String = smcat.render(source,{inputType: "json",outputType: "svg", direction: direction});
+      socket.emit("svg",SVG_String);
   } catch (pError) {
       console.error(pError);
   }
 }
 
-function addState(name, type){
+function addState(cardID, type){
   //s = new model.State(name,type);
   //s.addToStateList();
+  let stateName="état " + stateNumber.toString();
   let obj = {
-     name: stateNumber.toString(),
+     name: stateName,
      type: type
   }
-  stateNumber++;
   stateNames.push(obj.name);
-  diagJSON["states"].push(obj); 
+  knownCards.set(cardID, obj);
+  console.log(knownCards);
+  diagJSON["states"].push(obj);
+  stateNumber =((parseInt(stateNumber,36)+1).toString(36)).replace(/0/g,'');//Incrementation of state name 
   renderSVG(diagJSON);
 }
 
@@ -323,7 +186,13 @@ function renameS(names, type){
         }
         stateNames.pop(oldName);
         stateNames.push(newName);
+        for (let [key, value] of knownCards.entries()) {//If old name in the knownCards map, replace it by the new one
+          if (value.name === oldName){
+            value.name = newName;
+          }
+        }
       }
+      console.log(knownCards);
       for (var i = 0; i < diagJSON.transitions.length; i++){
         if(diagJSON.transitions[i].from==oldName){
           diagJSON.transitions[i].from=newName;
@@ -350,3 +219,4 @@ function renameS(names, type){
 server.listen(3000, () => {
   console.log('listening on *:3000');
 });
+

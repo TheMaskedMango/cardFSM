@@ -181,6 +181,7 @@ function rename(){//Condition sur l'élément selectionné
 function clearListeners(){//Remove the click listeners to free memory
     $(".state.regular polygon",svgRoot).off();//Remove previous listeners
     $(".transition polygon",svgRoot).off();
+    console.log("listeners supprimés");
 }
 
 function changeDirection(){
