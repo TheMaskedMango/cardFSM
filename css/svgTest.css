@@ -38,3 +38,13 @@ body button{
     bottom : 20px;
     right : 20px;
 }
+
+.blink {
+    animation: blinker 1s linear infinite;
+}
+  
+@keyframes blinker {
+    50% {
+        opacity: 0;
+    }
+}

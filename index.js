@@ -15,16 +15,28 @@ var direction = 'left-right';
 var selectedElements = Array();
 var stateNumber='a';
 var stateNames=Array();//Faire plutôt une map avec nom : idCarte
+var transitionNumber='a';
 var transitionNames=Array();
 
-var knownCards= new Map([["carte état initial","initial"]]);
+var knownCards= new Map([["carte état initial",{ name: 'initial', type: 'initial' }],["carte état test",{ name: 'ok', type: 'regular' }]]);
+var activeCards= new Map([["slot1",""],["slot2",""],["slot3",""],
+                          ["slot4",""],["slot5",""],["slot6",""],
+                          ["slot7",""],["slot8",""],["slot9",""]]);
+
+var proxy = new Proxy(activeCards,{
+  set: function(){
+    console.log(activeCards);
+  }
+});
 
 var diagJSON=//JSON used to render the svg
 {
   "transitions": [
       {
           "from":"initial",
-          "to":"ok"
+          "to":"ok",
+          "label":"test",
+          "event":"test"
       }
   ],
   "states": [
@@ -92,18 +104,6 @@ io.on('connection', (socket) => {
 ///////////////////////////////
 //LISTEN FOR PHYSICAL ACTIONS//
 ///////////////////////////////
-app.post('/etat', (req, res) => {//Ajout d'état
-  const { name, type } = req.body;
-
-  if (name && type) {
-    addState(name, type);
-    console.log(diagJSON);
-    res.send("l'état a été ajouté");
-  } else {
-    res.status(400).send('Il faut donner le type et le nom'); 
-  }
-});
-
 app.post('/etat1', (req, res) => {//Carte posée sur le slot état 1
   const { cardID} = req.body;
   console.log(req.body);
@@ -114,18 +114,33 @@ app.post('/etat1', (req, res) => {//Carte posée sur le slot état 1
       addState(cardID, 'regular');
       res.send("l'état a été ajouté");
     }
-    blink(cardID);
-
+    activateCard("slot4", cardID);
   } else {
-    res.status(400).send('Il faut donner le type et le nom'); 
+    res.status(400).send('état invalide'); 
+  }
+});
+
+app.post('/etat2', (req, res) => {//Carte posée sur le slot état 2
+  const { cardID} = req.body;
+  console.log(req.body);
+  if (cardID) {
+    if(knownCards.has(cardID)){
+      res.send("l'état existe déjà");
+    }else{
+      addState(cardID, 'regular');
+      res.send("l'état a été ajouté");
+    }
+    activateCard("slot6", cardID);
+  } else {
+    res.status(400).send('état invalide'); 
   }
 });
 
 app.post('/transition', (req, res) => {//Ajout de transition
-  const { from, to } = req.body;
+  const {cardID} = req.body;
 
-  if (from && to) {
-    addTransition(from, to);
+  if (cardID) {
+    addTransition(cardID);
     console.log(diagJSON);
     res.send("la transition a été ajoutée");
   } else {
@@ -137,8 +152,10 @@ app.post('/transition', (req, res) => {//Ajout de transition
 //SERVER-SIDE FUNCTIONS//
 /////////////////////////
 
-function blink(cardID){
-  //name = 
+function activateCard(slot, cardID){//Tells the client which card was laid and where
+  activeCards.set(slot,knownCards.get(cardID));
+  console.log(activeCards);
+  io.sockets.emit(slot,knownCards.get(cardID));
 }
 
 function renderSVG(source, socket = io.sockets){
@@ -150,7 +167,7 @@ function renderSVG(source, socket = io.sockets){
   }
 }
 
-function addState(cardID, type){
+function addState(cardID, type){//Add a new state in the diagram
   //s = new model.State(name,type);
   //s.addToStateList();
   let stateName="état " + stateNumber.toString();
@@ -166,12 +183,46 @@ function addState(cardID, type){
   renderSVG(diagJSON);
 }
 
-function addTransition(from, to){
-  let obj = {
-     from: from,
-     to: to
+function addTransition(cardID){
+  let obj;
+  let from;
+  let to;
+  switch (cardID) {
+    case 'transition gauche-droite':
+      if(activeCards.get('slot4')!='' && activeCards.get('slot6')!=''){
+        from = activeCards.get('slot4').name;
+        to = activeCards.get('slot6').name;
+      }
+      break;
+    case 'transition droite-gauche':
+      if(activeCards.get('slot4')!='' && activeCards.get('slot6')!=''){
+        from = activeCards.get('slot6').name;
+        to = activeCards.get('slot4').name;
+      }
+      break;
+    case 'transition gauche-gauche':
+      if(activeCards.get('slot4')!=''){
+        from = activeCards.get('slot4').name;
+        to = activeCards.get('slot4').name;
+      }
+      break;
+    case 'transition droite-droite':
+      if(activeCards.get('slot6')!=''){
+        from = activeCards.get('slot6').name;
+        to = activeCards.get('slot6').name;
+      }
+      break;
   }
+  obj = {
+     from: from,
+     to: to,
+     label: transitionNumber,
+     event: transitionNumber
+  }
+  transitionNames.push(obj.name);
+  knownCards.set(cardID, obj);
   diagJSON["transitions"].push(obj); 
+  transitionNumber =((parseInt(transitionNumber,36)+1).toString(36)).replace(/0/g,''); 
   renderSVG(diagJSON);
 }
 
@@ -208,9 +259,10 @@ function renameS(names, type){
       if(diagJSON.transitions[i].event==oldName){
         diagJSON.transitions[i].event=newName;
         diagJSON.transitions[i].label=newName;
-        console.log(diagJSON.transitions[i]);
+        console.log(diagJSON);
       }
     }
+    console.log(names);
     renderSVG(diagJSON);
   }
   

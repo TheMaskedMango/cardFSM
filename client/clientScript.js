@@ -2,12 +2,27 @@
 var socket = io();
 var direction = "top-bottom";//demande au serv bouffon
 var selectedType;
+var slot=Array();
 
-
+////////////////////
+//SERVER RECEIVING//
+////////////////////
 socket.on('svg', (svg) => {//Listening on socket
     renderSVG(socket,svg);
 });
 
+socket.on('slot4', (card) => {
+    slot[4] = card;
+});
+
+socket.on('slot6', (card) => {
+    slot[6] = card;
+});
+
+
+////////////////////
+//CLIENT FUNCTIONS//
+////////////////////
 function renderSVG(socket, svgString){//Parse the svg then displays it
     parser = new DOMParser();
     xmlDoc = parser.parseFromString(svgString, "image/svg+xml");
@@ -15,10 +30,8 @@ function renderSVG(socket, svgString){//Parse the svg then displays it
     linkSVG();
 }
 
-function displaySVG(xmlDoc){
+function displaySVG(xmlDoc){//Insert the svg element in the HTML
     console.log(xmlDoc.childNodes[3]);
-    //const content = xmlDoc.activeElement.innerHTML;
-    //$("#svgDiagram").html(content);
     let div = document.getElementById("svgContainer");
     div.replaceChild(xmlDoc.childNodes[3], div.firstChild);
 }
@@ -27,11 +40,10 @@ $(document).ready(function(){
     //linkSVG();
  });
 
- function linkSVG(){
+ function linkSVG(){//Processes the svg and add listeners on it
     //Wait until the svg loads
     var checkExist = setInterval(function() {
        if ($('svg').length) {
-          console.log("Images chargées");
           clearInterval(checkExist);
    
           svgRoot = $('svg');
@@ -62,9 +74,9 @@ $(document).ready(function(){
               console.log("source: "+stateArray[0]+"  destination: "+stateArray[1]);
               toggleSelectedTransition($(this),stateArray);
           });
-   
-   
-   
+          blinkActivated();
+
+          console.log("Images chargées");
        }else{
            console.log("Chargement du diagramme..")
        }
@@ -72,7 +84,7 @@ $(document).ready(function(){
    //the svg doc is loaded asynchronouslys
    }
 
-function resetSelected(){//Remove any selected element state
+function resetSelected(){//Remove any selected element status
     deselect();
     $(".state, .transition",svgRoot).removeClass("selected");
     $(".state, .transition",svgRoot).children("path").attr("stroke","black");
@@ -123,6 +135,30 @@ function colorTransition(elem,color="red"){
     elem.parent().children("polygon").attr("stroke","red");
 }
 
+
+function blinkActivated(){//Add blink animation on elements activated by their card
+    $("svgRoot"). removeClass("blink");//Un-blinking all previous elements
+    if(slot[4]!=undefined){//Slot état 1
+        $(".state text",svgRoot).each(function() {
+            if($(this).text()==slot[4].name){
+                console.log("trouvé");
+                $(this).attr("fill","orange");
+                $(this).addClass("blink");
+            }
+        });
+    }
+    if(slot[6]){//Slot état 2
+        $(".state text",svgRoot).each(function() {
+            if($(this).text()==slot[6].name){
+                console.log("trouvé");
+                $(this).attr("fill","orange");
+                $(this).addClass("blink");
+            }
+        });
+    }
+
+}
+
 ////////////////////////
 //SERVER COMMUNICATING//
 ////////////////////////
@@ -142,7 +178,6 @@ function deselect(elem){
         let name = elem.parent().children("title").html();
         socket.emit('deselected_name',name);
     }
-
 }
 
 function rename(){//Condition sur l'élément selectionné
@@ -162,8 +197,8 @@ function rename(){//Condition sur l'élément selectionné
             resetSelected();
         }
     }else if(selectedType=="transition"){
-        oldName = $(".selected").children("text").html();
-        newName = prompt("Nouveau nom de la transition",oldName.replace(/&nbsp;/g, ''));
+        oldName = $(".selected").children("text").html().replace(/&nbsp;/g, '').trim();
+        newName = prompt("Nouveau nom de la transition",oldName);
         if(oldName!=newName && newName!==null){
             let rename = Array();
             rename[0]=oldName;

@@ -1,8 +1,10 @@
 import wx
 import requests
 
-listesCartesSlotEtat = ["carte état 1","carte état 2","carte état 3","carte état 4"]
-listesCartesSlotTransition = ["transition gauche-droite","transition droite-droite","transition gauche-gauche","transition droite-droite"]
+listesCartesSlotEtat = ["carte état initial","carte état test","carte état 1","carte état 2","carte état 3","carte état 4"]
+listesCartesSlotSpecEtat = ["carte entry","carte exit"]
+listesCartesSlotSpecTransition = ["carte garde","carte action"]
+listesCartesSlotTransition = ["transition gauche-droite","transition droite-gauche","transition gauche-gauche","transition droite-droite"]
 
 host = 'http://localhost:3000/'
 
@@ -69,9 +71,9 @@ class MainPanel(wx.Panel):
                   ("blue","slot état 1",listesCartesSlotEtat),
                   ("red","slot transition",listesCartesSlotTransition),
                   ("blue","slot état 2",listesCartesSlotEtat),
-                  ("pink","slot spécialisation état 1",listesCartesSlotEtat),
-                  ("pink","slot spécialisation transition",listesCartesSlotEtat),
-                  ("pink","slot spécialisation état 2",listesCartesSlotEtat)]
+                  ("pink","slot spécialisation état 1",listesCartesSlotSpecEtat),
+                  ("pink","slot spécialisation transition",listesCartesSlotSpecTransition),
+                  ("pink","slot spécialisation état 2",listesCartesSlotSpecEtat)]
 
         #p = wx.Panel(self) 
          
