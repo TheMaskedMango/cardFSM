@@ -135,19 +135,19 @@ function colorTransition(elem,color="red"){
 
 
 function blinkActivated(){//Add blink animation on elements activated by their card
-    $("svgRoot"). removeClass("blink");//Un-blinking all previous elements
+    $("svgRoot"). removeClass("activated");//Un-blinking all previous elements
     if(slot[4]!=undefined){//Slot état 1
         $(".state text",svgRoot).each(function() {
             if($(this).text()==slot[4].name){
-                $(this).attr("fill","orange");
-                $(this).addClass("blink");
+                $(this).attr("fill","blue");
+                $(this).addClass("activated");
             }
         });
         $(".state title",svgRoot).each(function() {
             if($(this).text()==slot[4].name){
                 $(this).parent().children("ellipse").attr("fill","orange");
                 $(this).parent().children("ellipse").attr("stroke","orange");
-                $(this).addClass("blink");
+                $(this).addClass("activated");
             }
         });
     }

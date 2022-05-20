@@ -33,24 +33,24 @@ var diagJSON=//JSON used to render the svg
 {
   "transitions": [
       {
-          "from":"initial",
-          "to":"ok",
-          "label":"test",
-          "event":"test"
+        "from":"initial",
+        "to":"ok",
+        "label":"test",
+        "event":"test"
       }
   ],
   "states": [
       {
-          "name": "initial",
-          "type": "initial"
+        "name": "initial",
+        "type": "initial"
       },
       {
         "name": "final",
         "type": "final"
       },
       {
-          "name": "ok",
-          "type": "regular"
+        "name": "ok",
+        "type": "regular"
       }
   ]
 };
@@ -121,20 +121,25 @@ app.post('/card', (req, res) => {//Carte posée
         addState(cardID, 'regular');
         res.send("l'état a été ajouté");
       }
-      activateCard(slot, cardID);
     }
 
     if (slot==5) {//slot transition
       addTransition(cardID);
       console.log(diagJSON);
       res.send("la transition a été ajoutée");
-      activateCard("5", cardID);
     }
+
+    if(slot==7 || slot==9){//slots spec état
+      addStateAction(cardID,slot);
+      res.send("l'action a été ajoutée");
+      
+    }
+
+    activateCard(slot, cardID);
 
   }
 
 });
-
 
 
 /////////////////////////
@@ -175,6 +180,22 @@ function addState(cardID, type){//Add a new state in the diagram
   diagJSON["states"].push(obj);
   stateNumber =((parseInt(stateNumber,36)+1).toString(36)).replace(/0/g,'');//Incrementation of state name 
   renderSVG(diagJSON);
+}
+
+function addStateAction(cardID, slot){//condition entry exit et slot 4 ou 6
+  let action = [{
+    type: 'entry',
+    body: 'action'
+  }];
+  if(slot==7 && activeCards.get('slot4')!=''){
+    for (var i = 0; i < diagJSON.states.length; i++){
+      if(diagJSON.states[i].name==activeCards.get('slot4').name){
+        diagJSON.states[i].actions=action;
+        console.log(diagJSON)
+        renderSVG(diagJSON);
+      }
+    }
+  }
 }
 
 function addTransition(cardID){
