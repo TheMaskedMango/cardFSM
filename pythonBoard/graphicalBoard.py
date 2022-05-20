@@ -1,37 +1,31 @@
 import wx
 import requests
 
-listesCartesSlotEtat = ["carte état initial","carte état test","carte état 1","carte état 2","carte état 3","carte état 4"]
+listesCartesSlotEtat = ["carte état initial","carte état final","carte état test","carte état 1","carte état 2","carte état 3","carte état 4"]
 listesCartesSlotSpecEtat = ["carte entry","carte exit"]
 listesCartesSlotSpecTransition = ["carte garde","carte action"]
 listesCartesSlotTransition = ["transition gauche-droite","transition droite-gauche","transition gauche-gauche","transition droite-droite"]
 
-host = 'http://localhost:3000/'
+host = 'http://localhost:3000/card'
 
 
 
 def sendServer(slot,info):
-    if("slot état 1" in slot):
-        slotURL = 'etat1'
-    elif("slot état 2" in slot):
-        slotURL = 'etat2'
-    elif("slot transition" in slot):
-        slotURL = 'transition'
-    data = {'cardID': info}
+    data = {'slot': slot, 'cardID': info}
     print(data)
-    url = host + slotURL
-    r = requests.post(url, data)
+    r = requests.post(host, data)
     print(r.text)
 
 
 class Slot(wx.Panel):
 
     #----------------------------------------------------------------------
-    def __init__(self, parent, label, color, choices):
+    def __init__(self, parent, label, color, choices, number):
         """Constructor"""
         wx.Panel.__init__(self, parent)
         self.SetBackgroundColour(color)
         self.label = label
+        self.number = number
         lbl = wx.StaticText(self, label=label)
 
 
@@ -50,7 +44,7 @@ class Slot(wx.Panel):
     def onCombo(self, event):
         self.phaseSelection = self.combo.GetValue()
         print (self.label+": "+self.phaseSelection)
-        sendServer(self.label,self.phaseSelection)
+        sendServer(self.number,self.phaseSelection)
 
 ########################################################################
 class MainPanel(wx.Panel):
@@ -84,10 +78,11 @@ class MainPanel(wx.Panel):
             #gs.Add(wx.Button(self,label = btn),0,wx.EXPAND) 
 
             #p.SetSizer(gs)
-
+        number = 1
         for color, label, choix in slots:
-            panel = Slot(self, label, color, choix)
+            panel = Slot(self, label, color, choix, number)
             gs.Add(panel, 1, wx.EXPAND)
+            number=number+1
 
 
 

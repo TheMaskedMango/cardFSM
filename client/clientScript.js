@@ -11,12 +11,10 @@ socket.on('svg', (svg) => {//Listening on socket
     renderSVG(socket,svg);
 });
 
-socket.on('slot4', (card) => {
-    slot[4] = card;
-});
-
-socket.on('slot6', (card) => {
-    slot[6] = card;
+socket.on('cardChange',(change)=> {
+    console.log(change)
+    slot[parseInt(change.slot,10)] = change.card;
+    blinkActivated();
 });
 
 
@@ -141,15 +139,31 @@ function blinkActivated(){//Add blink animation on elements activated by their c
     if(slot[4]!=undefined){//Slot état 1
         $(".state text",svgRoot).each(function() {
             if($(this).text()==slot[4].name){
-                console.log("trouvé");
+                $(this).attr("fill","orange");
+                $(this).addClass("blink");
+            }
+        });
+        $(".state title",svgRoot).each(function() {
+            if($(this).text()==slot[4].name){
+                $(this).parent().children("ellipse").attr("fill","orange");
+                $(this).parent().children("ellipse").attr("stroke","orange");
+                $(this).addClass("blink");
+            }
+        });
+    }
+    if(slot[6]!=undefined){//Slot état 2
+        $(".state text",svgRoot).each(function() {
+            if($(this).text()==slot[6].name){
                 $(this).attr("fill","orange");
                 $(this).addClass("blink");
             }
         });
     }
-    if(slot[6]){//Slot état 2
-        $(".state text",svgRoot).each(function() {
-            if($(this).text()==slot[6].name){
+
+    if(slot[5]!=undefined){//Slot transition
+        console.log(slot[5])
+        $(".transition text",svgRoot).each(function() {
+            if($(this).text().trim()==slot[5].label){
                 console.log("trouvé");
                 $(this).attr("fill","orange");
                 $(this).addClass("blink");

@@ -18,7 +18,7 @@ var stateNames=Array();//Faire plutôt une map avec nom : idCarte
 var transitionNumber='a';
 var transitionNames=Array();
 
-var knownCards= new Map([["carte état initial",{ name: 'initial', type: 'initial' }],["carte état test",{ name: 'ok', type: 'regular' }]]);
+var knownCards= new Map([["carte état initial",{ name: 'initial', type: 'initial' }],["carte état final",{ name: 'final', type: 'final' }],["carte état test",{ name: 'ok', type: 'regular' }]]);
 var activeCards= new Map([["slot1",""],["slot2",""],["slot3",""],
                           ["slot4",""],["slot5",""],["slot6",""],
                           ["slot7",""],["slot8",""],["slot9",""]]);
@@ -43,6 +43,10 @@ var diagJSON=//JSON used to render the svg
       {
           "name": "initial",
           "type": "initial"
+      },
+      {
+        "name": "final",
+        "type": "final"
       },
       {
           "name": "ok",
@@ -104,58 +108,48 @@ io.on('connection', (socket) => {
 ///////////////////////////////
 //LISTEN FOR PHYSICAL ACTIONS//
 ///////////////////////////////
-app.post('/etat1', (req, res) => {//Carte posée sur le slot état 1
-  const { cardID} = req.body;
+
+app.post('/card', (req, res) => {//Carte posée
+  const {slot, cardID} = req.body;
   console.log(req.body);
-  if (cardID) {
-    if(knownCards.has(cardID)){
-      res.send("l'état existe déjà");
-    }else{
-      addState(cardID, 'regular');
-      res.send("l'état a été ajouté");
+  if (cardID && slot) {
+
+    if(slot==4 || slot==6){//slots états
+      if(knownCards.has(cardID)){
+        res.send("l'état existe déjà");
+      }else{
+        addState(cardID, 'regular');
+        res.send("l'état a été ajouté");
+      }
+      activateCard(slot, cardID);
     }
-    activateCard("slot4", cardID);
-  } else {
-    res.status(400).send('état invalide'); 
-  }
-});
 
-app.post('/etat2', (req, res) => {//Carte posée sur le slot état 2
-  const { cardID} = req.body;
-  console.log(req.body);
-  if (cardID) {
-    if(knownCards.has(cardID)){
-      res.send("l'état existe déjà");
-    }else{
-      addState(cardID, 'regular');
-      res.send("l'état a été ajouté");
+    if (slot==5) {//slot transition
+      addTransition(cardID);
+      console.log(diagJSON);
+      res.send("la transition a été ajoutée");
+      activateCard("5", cardID);
     }
-    activateCard("slot6", cardID);
-  } else {
-    res.status(400).send('état invalide'); 
+
   }
+
 });
 
-app.post('/transition', (req, res) => {//Ajout de transition
-  const {cardID} = req.body;
 
-  if (cardID) {
-    addTransition(cardID);
-    console.log(diagJSON);
-    res.send("la transition a été ajoutée");
-  } else {
-    res.status(400).send("La transition n'est pas valide"); 
-  }
-});
 
 /////////////////////////
 //SERVER-SIDE FUNCTIONS//
 /////////////////////////
 
 function activateCard(slot, cardID){//Tells the client which card was laid and where
-  activeCards.set(slot,knownCards.get(cardID));
+  activeCards.set('slot'+slot,knownCards.get(cardID));
   console.log(activeCards);
   io.sockets.emit(slot,knownCards.get(cardID));
+  let obj = {
+    slot: slot,
+    card: knownCards.get(cardID)
+  }
+  io.sockets.emit('cardChange',obj);
 }
 
 function renderSVG(source, socket = io.sockets){
