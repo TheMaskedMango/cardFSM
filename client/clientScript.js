@@ -46,7 +46,6 @@ $(document).ready(function(){
    
           svgRoot = $('svg');
           
-          //$(svgRoot[1]).css("display","none");//Hiding vertical diagram by default
           $(svgRoot).attr('id', 'svgDiagram');
           $(svgRoot).attr('width', '90%');
           $(svgRoot).attr('height', '90%');
@@ -72,7 +71,7 @@ $(document).ready(function(){
               console.log("source: "+stateArray[0]+"  destination: "+stateArray[1]);
               toggleSelectedTransition($(this),stateArray);
           });
-          blinkActivated();
+          markActivated();
 
           console.log("Images chargées");
        }else{
@@ -85,9 +84,9 @@ $(document).ready(function(){
 function resetSelected(){//Remove any selected element status
     deselect();
     $(".state, .transition",svgRoot).removeClass("selected");
-    $(".state, .transition",svgRoot).children("path").attr("stroke","black");
-    $(".state, .transition",svgRoot).children("polygon").attr("fill","black");
-    $(".transition",svgRoot).children("polygon").attr("stroke","black");
+    $(".state, .transition",svgRoot).children("text").attr("fill","black");
+    //$(".state, .transition",svgRoot).children("polygon").attr("fill","black");
+    //$(".transition",svgRoot).children("polygon").attr("stroke","black");
 }   
 
 function toggleSelectedState(elem, color) {
@@ -95,7 +94,7 @@ function toggleSelectedState(elem, color) {
     if(elem.parent().hasClass("selected")){
         console.log("déselectionné");
         $("#rename").css("display","none");
-        elem.parent().children("path").attr("stroke","black");
+        elem.parent().children("text").attr("fill","black");
         elem.parent().removeClass("selected");
         deselect(elem);
     }else{
@@ -124,7 +123,7 @@ function toggleSelectedTransition(elem, states) {
 }
 
 function colorState(elem,color="blue"){
-    elem.parent().children("path").attr("stroke",color);
+    elem.parent().children("text").attr("fill",color);
 }
 
 function colorTransition(elem,color="red"){
@@ -134,42 +133,9 @@ function colorTransition(elem,color="red"){
 }
 
 
-function blinkActivated(){//Add blink animation on elements activated by their card
-    $("svgRoot"). removeClass("activated");//Un-blinking all previous elements
-    if(slot[4]!=undefined){//Slot état 1
-        $(".state text",svgRoot).each(function() {
-            if($(this).text()==slot[4].name){
-                $(this).attr("fill","blue");
-                $(this).addClass("activated");
-            }
-        });
-        $(".state title",svgRoot).each(function() {
-            if($(this).text()==slot[4].name){
-                $(this).parent().children("ellipse").attr("fill","orange");
-                $(this).parent().children("ellipse").attr("stroke","orange");
-                $(this).addClass("activated");
-            }
-        });
-    }
-    if(slot[6]!=undefined){//Slot état 2
-        $(".state text",svgRoot).each(function() {
-            if($(this).text()==slot[6].name){
-                $(this).attr("fill","orange");
-                $(this).addClass("blink");
-            }
-        });
-    }
-
-    if(slot[5]!=undefined){//Slot transition
-        console.log(slot[5])
-        $(".transition text",svgRoot).each(function() {
-            if($(this).text().trim()==slot[5].label){
-                console.log("trouvé");
-                $(this).attr("fill","orange");
-                $(this).addClass("blink");
-            }
-        });
-    }
+function markActivated(){//Add blink animation on elements activated by their card
+    //$('.activeState1').children("text").attr('fill',"orange");
+    $('.activeState1').append('<circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red"/>');
 
 }
 
