@@ -5,6 +5,7 @@ listesCartesSlotEtat = ["carte état initial","carte état final","carte état t
 listesCartesSlotSpecEtat = ["carte entry","carte exit"]
 listesCartesSlotSpecTransition = ["carte garde","carte action"]
 listesCartesSlotTransition = ["transition gauche-droite","transition droite-gauche","transition gauche-gauche","transition droite-droite"]
+listesCartesSlotPattern = ["carte état composite","carte pattern vide"]
 
 host = 'http://localhost:3000/card'
 
@@ -59,12 +60,12 @@ class MainPanel(wx.Panel):
         hsizer2 = wx.BoxSizer(wx.HORIZONTAL)
         v_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        slots = [("purple","slot infos",listesCartesSlotEtat),
-                  ("green","slot pattern",listesCartesSlotEtat),
+        slots = [("plum","slot infos",listesCartesSlotEtat),
+                  ("green","slot pattern",listesCartesSlotPattern),
                   ("coral","slot correction",listesCartesSlotEtat),
-                  ("blue","slot état 1",listesCartesSlotEtat),
+                  ("cyan","slot état 1",listesCartesSlotEtat),
                   ("red","slot transition",listesCartesSlotTransition),
-                  ("blue","slot état 2",listesCartesSlotEtat),
+                  ("turquoise","slot état 2",listesCartesSlotEtat),
                   ("pink","slot spécialisation état 1",listesCartesSlotSpecEtat),
                   ("pink","slot spécialisation transition",listesCartesSlotSpecTransition),
                   ("pink","slot spécialisation état 2",listesCartesSlotSpecEtat)]

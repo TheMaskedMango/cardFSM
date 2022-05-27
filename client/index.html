@@ -3,24 +3,49 @@
     <head>
         <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
         <link rel="stylesheet" type="text/css" href="css/svgTest.css">
-        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/animate.css/3.2.0/animate.min.css">
-        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+        <style>
+            label, input { display:block; }
+            input.text { margin-bottom:12px; width:95%; padding: .4em; }
+            fieldset { padding:0; border:0; margin-top:25px; }
+            h1 { font-size: 1.2em; margin: .6em 0; }
+            div#users-contain { width: 350px; margin: 20px 0; }
+            div#users-contain table { margin: 1em 0; border-collapse: collapse; width: 100%; }
+            div#users-contain table td, div#users-contain table th { border: 1px solid #eee; padding: .6em 10px; text-align: left; }
+            .ui-dialog .ui-state-error { padding: .3em; }
+            #dialog{display : none;}
+        </style>
     </head>
     <body>
         <title>cardFSM</title>
         <script src="/socket.io/socket.io.js"></script>
         <script src="client/clientScript.js"></script>
 
+        <div id="dialog" title="Modifier l'élément">
+            <p class="validateTips"></p>
+           
 
-        <!--<object data="basicSm.svg" type="image/svg+xml" id="svgDiagram"></object>-->
-        <!--<svg id="svgDiagram" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"></svg>-->
+            <fieldset>
+              <label for="name">Nom</label>
+              <input type="text" name="name" id="name" value="" class="text ui-widget-content ui-corner-all">
+              <label for="input2">champ 2</label>
+              <input type="text" name="input2" id="input2" value="" class="text ui-widget-content ui-corner-all">
+              <label for="input3">champ 3</label>
+              <input type="text" name="input3" id="input3" value="" class="text ui-widget-content ui-corner-all">
+          
+              <!-- Allow form submission with keyboard without duplicating the dialog button -->
+              <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+            </fieldset>
+
+          </div>
         <div id="svgContainer">
             <!--The svg goes here-->
         </div>
         <h1 id="empty">Le diagramme est vide, posez une carte pour commencer</h1>
         <button onclick="changeDirection()" id="rotate"><img src="images/orientation.png" width="70px" height="70px"/></button>
-        <button onclick="rename()" id="rename">Renommer</button>
+        <button onclick="editDialog()" id="rename">Renommer</button>
 
 
     </body>
