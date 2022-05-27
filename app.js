@@ -249,17 +249,21 @@ function renderSVG(source, socket = io.sockets){
 
 function addNestedState(cardID){
   let nestedStateName="état composite " + stateNumber.toString();
-  let obj = {
-    name: nestedStateName,
-    type: 'regular',
-    statemachine: diagJSON2  
+  let newDiag = {
+    "transitions": [
+    ],
+    "states": [
+        {
+          "name": nestedStateName,
+          "type": "regular",
+          "statemachine": diagJSON
+        }
+    ]
   };
-  stateNames.push(obj.name);
-  knownCards.set(cardID, obj);
-  diagJSON["states"]='';
-  diagJSON["states"]=obj;
+  diagJSON = newDiag;
+  //knownCards.set(cardID, obj);
   stateNumber =((parseInt(stateNumber,36)+1).toString(36)).replace(/0/g,'');//Incrementation of state name 
-  console.log(diagJSON["states"][0].statemachine)
+
   renderSVG(diagJSON);
 }
 
