@@ -47,40 +47,40 @@ $(document).ready(function(){
     //Wait until the svg loads
     var checkExist = setInterval(function() {
        if ($('svg').length) {
-          clearInterval(checkExist);
-   
-          svgRoot = $('svg');
-          
-          $(svgRoot).attr('id', 'svgDiagram');
-          $(svgRoot).attr('width', '90%');
-          $(svgRoot).attr('height', '90%');
-          $("#rename").css("display","none");
-   
-   
-          //console.log($(".state",svgRoot));
-          if($(".state",svgRoot).length) {
-              $("#empty").css("display","none");
-          }else{
-              $("#empty").css("display","");
-          }
-   
-          clearListeners();
-          $(".state.regular polygon",svgRoot).click(function() {//Listeners states
-              console.log($(this).parent().children("title").html());
-              toggleSelectedState($(this),"blue");
-          });
-          
-          
-          $(".transition polygon",svgRoot).click(function() {//Listeners transitions
-              stateArray = $(this).parent().children("title").html().split("-&gt;");
-              console.log("source: "+stateArray[0]+"  destination: "+stateArray[1]);
-              toggleSelectedTransition($(this),stateArray);
-          });
-          markActivated();
+            clearInterval(checkExist);
 
-          console.log("Images chargées");
+            svgRoot = $('svg');
+            
+            $(svgRoot).attr({
+            id: 'svgDiagram',
+            width:'70%',
+            height:'70%',
+            });
+            $("#rename").css("display","none");
+
+            if($(".state",svgRoot).length) {
+                $("#empty").css("display","none");
+            }else{
+                $("#empty").css("display","");
+            }
+
+            clearListeners();
+            $(".state.regular polygon",svgRoot).click(function() {//Listeners states
+                console.log($(this).parent().children("title").html());
+                toggleSelectedState($(this),"blue");
+            });
+            
+            
+            $(".transition polygon",svgRoot).click(function() {//Listeners transitions
+                stateArray = $(this).parent().children("title").html().split("-&gt;");
+                console.log("source: "+stateArray[0]+"  destination: "+stateArray[1]);
+                toggleSelectedTransition($(this),stateArray);
+            });
+            markActivated();
+
+            console.log("Images chargées");
        }else{
-           console.log("Chargement du diagramme..")
+            console.log("Chargement du diagramme..")
        }
     }, 100);
    //the svg doc is loaded asynchronouslys
@@ -88,6 +88,7 @@ $(document).ready(function(){
 
 function resetSelected(){//Remove any selected element status
     deselect();
+    $("#rename").css("display","none");
     $(".state, .transition",svgRoot).removeClass("selected");
     $(".state, .transition",svgRoot).children("text").attr("fill","black");
     //$(".state, .transition",svgRoot).children("polygon").attr("fill","black");
@@ -135,8 +136,27 @@ function colorTextElement(elem,color="blue"){
 
 
 function markActivated(){//Add blink animation on elements activated by their card
-    //$('.activeState1').children("text").attr('fill',"orange");
-    $('.activeState1').append('<circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red"/>');
+    let stateLeft = $('.activeState1').children("title").html() ? $('.activeState1').children("title").html():'' ;
+    let stateRight = $('.activeState2').children("title").html() ? $('.activeState2').children("title").html():'';
+    let transition = $('.activeTransition').children("title").html();
+
+
+    $("#spanCard1").text(stateLeft);
+    $("#spanCard3").text(stateRight);
+    if(transition){
+        stateArray = transition.split("-&gt;");
+        if(stateArray[0]==stateArray[1]){
+            if(stateArray[0] ==$("#spanCard1").text()){
+                $("#spanCard2").html("&#11148;");
+            }else{
+                $("#spanCard2").html("&#11150;");
+            }
+        }else if(stateArray[0] ==$("#spanCard1").text()){
+            $("#spanCard2").html("&#129062;");
+        }else{
+            $("#spanCard2").html("&#129060;");
+        }
+    }
 
 }
 
@@ -178,6 +198,8 @@ function editDialog(){
             $('label[for=input2], input#input2').hide();
             $('label[for=input3], input#input3').hide();
         }else if (selectedElem.actions.length > 0) {
+            $('label[for=input2], input#input2').show();
+            $('label[for=input3], input#input3').show();
             console.log(selectedElem.actions[0].type);
             $('label[for=input2]').html(selectedElem.actions[0].type);
             $('#input2').val(selectedElem.actions[0].body)
@@ -261,4 +283,8 @@ function changeDirection(){
     clearListeners();
     socket.emit('direction');
     linkSVG();
+}
+
+function getPos(){
+    console.log( $('#rotate').position());
 }

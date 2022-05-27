@@ -23,12 +23,6 @@ var activeCards= new Map([["slot1",""],["slot2",""],["slot3",""],
                           ["slot4",""],["slot5",""],["slot6",""],
                           ["slot7",""],["slot8",""],["slot9",""]]);
 
-// var proxy = new Proxy(activeCards,{
-//   set: function(){
-//     console.log(activeCards);
-//   }
-// });
-
 var diagJSON=//JSON used to render the svg
 {
   "transitions": [
@@ -210,7 +204,7 @@ function activateCard(slot, cardID){//Tells the client which card was laid and w
       }
       if(diagJSON.states[i].name==activeCards.get('slot4').name){
         diagJSON.states[i].class = 'activeState1';
-        diagJSON.states[i].color = 'cyan';
+        diagJSON.states[i].color = 'blue';
       }
     }
   }
@@ -223,7 +217,7 @@ function activateCard(slot, cardID){//Tells the client which card was laid and w
       }
       if(diagJSON.states[i].name==activeCards.get('slot6').name){
         diagJSON.states[i].class = 'activeState2';
-        diagJSON.states[i].color = 'turquoise';
+        diagJSON.states[i].color = 'blue';
       }
     }
   }
@@ -259,11 +253,13 @@ function addNestedState(cardID){
     name: nestedStateName,
     type: 'regular',
     statemachine: diagJSON2  
-  }
+  };
   stateNames.push(obj.name);
   knownCards.set(cardID, obj);
-  diagJSON["states"].push(obj);
+  diagJSON["states"]='';
+  diagJSON["states"]=obj;
   stateNumber =((parseInt(stateNumber,36)+1).toString(36)).replace(/0/g,'');//Incrementation of state name 
+  console.log(diagJSON["states"][0].statemachine)
   renderSVG(diagJSON);
 }
 
@@ -475,7 +471,6 @@ function buildTransitionLabel(transition, name){
   }else if(transition.action){
     transition.label +=' \\'+transition.action;
   }
-  console.log("HOUHOUHOU BELAL")
 }
 
 server.listen(3000, () => {

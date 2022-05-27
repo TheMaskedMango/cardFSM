@@ -25,8 +25,6 @@
 
         <div id="dialog" title="Modifier l'élément">
             <p class="validateTips"></p>
-           
-
             <fieldset>
               <label for="name">Nom</label>
               <input type="text" name="name" id="name" value="" class="text ui-widget-content ui-corner-all">
@@ -38,14 +36,27 @@
               <!-- Allow form submission with keyboard without duplicating the dialog button -->
               <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
             </fieldset>
-
-          </div>
+        </div>
         <div id="svgContainer">
             <!--The svg goes here-->
         </div>
+        <div id="contextView">
+            <div class="card" id="card1">
+                <img src="images/card1.png" alt="contextView cards">
+                <span id="spanCard1"></span>
+            </div>
+            <div class="card" id="card3">
+                <img src="images/card2.png" alt="contextView cards">
+                <span id="spanCard2"></span>
+            </div>
+            <div class="card" id="card3">
+                <img src="images/card3.png" alt="contextView cards">
+                <span id="spanCard3"></span>
+            </div>
+        </div>
         <h1 id="empty">Le diagramme est vide, posez une carte pour commencer</h1>
         <button onclick="changeDirection()" id="rotate"><img src="images/orientation.png" width="70px" height="70px"/></button>
-        <button onclick="editDialog()" id="rename">Renommer</button>
+        <button onclick="editDialog()" id="rename"><img src="images/edit.png" width="70px" height="70px"/></button>
 
 
     </body>
