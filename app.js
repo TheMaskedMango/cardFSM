@@ -279,9 +279,10 @@ function renderSVG(source, socket = io.sockets){
 
 function addNestedState(cardID){
   let nestedStateName="état composite " + elemIndex.nested.toString();
+  let transitions = diagJSON.transitions;
+  diagJSON.transitions = [];
   let newDiag = {
-    "transitions": [
-    ],
+    "transitions": transitions,
     "states": [
         {
           "name": nestedStateName,
@@ -294,7 +295,7 @@ function addNestedState(cardID){
   diagJSON = newDiag;
   knownCards.set(cardID, newDiag.states[0]);
   elemIndex.nested =((parseInt(elemIndex.nested,36)+1).toString(36)).replace(/0/g,'');//Incrementation of state name 
-
+  console.log(diagJSON)
   renderSVG(diagJSON);
 }
 
