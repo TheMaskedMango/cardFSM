@@ -69,6 +69,11 @@ $(document).ready(function(){
                 console.log($(this).parent().children("title").html());
                 toggleSelectedState($(this),"blue");
             });
+
+            $(".cluster text",svgRoot).click(function() {//Listeners nested (composite) states
+                console.log($(this).parent().children("title").html());
+                toggleSelectedState($(this),"green");
+            });
             
             
             $(".transition polygon",svgRoot).click(function() {//Listeners transitions
@@ -107,7 +112,7 @@ function toggleSelectedState(elem, color) {
         console.log("selectionné");
         resetSelected();
         $("#rename").css("display","");
-        colorTextElement(elem);
+        colorTextElement(elem, color);
         elem.parent().addClass("selected");
         select(elem,"state");
     }
@@ -136,9 +141,9 @@ function colorTextElement(elem,color="blue"){
 
 
 function markActivated(){//Add blink animation on elements activated by their card
-    let stateLeft = $('.activeState1').children("title").html() ? $('.activeState1').children("title").html():'' ;
-    let stateRight = $('.activeState2').children("title").html() ? $('.activeState2').children("title").html():'';
-    let transition = $('.activeTransition').children("title").html();
+    let stateLeft = $('.activeState1').children("text").html() ? $('.activeState1').children("text").html():'' ;
+    let stateRight = $('.activeState2').children("text").html() ? $('.activeState2').children("text").html():'';
+    let transition = $('.activeTransition').children("title").html() ;
 
 
     $("#spanCard1").text(stateLeft);
@@ -156,6 +161,8 @@ function markActivated(){//Add blink animation on elements activated by their ca
         }else{
             $("#spanCard2").html("&#129060;");
         }
+    }else{
+        $("#spanCard2").html("");
     }
 
 }
@@ -193,7 +200,7 @@ function editDialog(){
     let oldName;
 
     if(selectedType=="state"){
-        oldName = $(".selected").children("title").html()
+        oldName = $(".selected").children("text").html()
         if(selectedElem.actions==undefined){
             $('label[for=input2], input#input2').hide();
             $('label[for=input3], input#input3').hide();
@@ -276,6 +283,7 @@ function rename(){//Condition sur l'élément selectionné
 function clearListeners(){//Remove the click listeners to free memory
     $(".state.regular polygon",svgRoot).off();//Remove previous listeners
     $(".transition polygon",svgRoot).off();
+    $(".nested text",svgRoot).off();
     console.log("listeners supprimés");
 }
 
@@ -283,8 +291,4 @@ function changeDirection(){
     clearListeners();
     socket.emit('direction');
     linkSVG();
-}
-
-function getPos(){
-    console.log( $('#rotate').position());
 }

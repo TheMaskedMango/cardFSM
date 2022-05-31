@@ -1,7 +1,6 @@
 const model = require("./stateMachineModel");
 const express = require('express');
 const bodyParser = require('body-parser')
-const fs = require('fs');
 const smcat = require("state-machine-cat");
 const http = require('http');
 const { Server } = require("socket.io"); 
@@ -13,9 +12,8 @@ const io = new Server(server);
 var SVG_String;
 var direction = 'left-right';
 var selectedElements = Array();
-var stateNumber='a';
-var stateNames=Array();//Faire plutôt une map avec nom : idCarte
-var transitionNumber='a';
+var elemIndex = {state : 'a', transition : 'a', nested : 'a'};
+var stateNames=Array();
 var transitionList=Array();
 
 var knownCards= new Map([["carte état initial",{ name: 'initial', type: 'initial' }],["carte état final",{ name: 'final', type: 'final' }],["carte état test",{ name: 'ok', type: 'regular' }]]);
@@ -29,8 +27,14 @@ var diagJSON=//JSON used to render the svg
       {
         "from":"initial",
         "to":"ok",
-        "label":"test",
-        "event":"test"
+        "label":"début",
+        "event":"début"
+      },
+      {
+        "from":"ok",
+        "to":"final",
+        "label":"fin",
+        "event":"fin"
       }
   ],
   "states": [
@@ -91,7 +95,6 @@ io.on('connection', (socket) => {
   });
 
   socket.on('rename', (rename, type) => {
-    //console.log('name to change: ' + rename[0]+" with: "+ rename[1]);
     renameS(rename, type);
     console.log(stateNames);
   });
@@ -141,7 +144,7 @@ app.post('/card', (req, res) => {//Carte posée
       if(knownCards.has(cardID)){
         res.send("carte déjà connue");
       }else{
-        if(cardID=='carte état composite'){
+        if(cardID=='carte pattern composite'){
           addNestedState(cardID);
           res.send("état composite ajouté");
         }
@@ -150,9 +153,9 @@ app.post('/card', (req, res) => {//Carte posée
     }
 
     if(slot==4 || slot==6){//slots états
-      if(knownCards.has(cardID)){
+      if(knownCards.has(cardID) || cardID.includes("pattern")){
         res.send("l'état existe déjà");
-      }else{
+      }else {
         addState(cardID, 'regular');
         res.send("l'état a été ajouté");
       }
@@ -190,26 +193,54 @@ app.post('/card', (req, res) => {//Carte posée
 //SERVER-SIDE FUNCTIONS//
 /////////////////////////
 
+function recursiveColorElement(root, name, color, className){//Colors the border of the active state and adds them the active class
+  for (var i = 0; i < root.states.length; i++){
+    if(root.states[i].name==name){
+      root.states[i].class = className;
+      root.states[i].color = color;
+      return;
+    }else if(root.states[i].statemachine != null){
+      recursiveColorElement(root.states[i].statemachine, name, color, className);
+    }
+  }
+}
+
+function recursiveUncolorElement(root){//Removes the previous colored border and class
+  for (var i = 0; i < root.states.length; i++){
+    if(root.states[i].class == 'activeState1'){
+      root.states[i].class = '';
+      root.states[i].color = 'black';
+    } 
+    if(root.states[i].statemachine != null){
+      recursiveUncolorElement(root.states[i].statemachine);
+    }
+  }
+}
+
 function activateCard(slot, cardID){//Tells the client which card was laid and where
   activeCards.set('slot'+slot,knownCards.get(cardID));
   //console.log(activeCards);
-  console.log(diagJSON);
+  console.log(activeCards);
+  let color = "blue";
 
-  if(slot==4){
-    let text = ["État actif 1"]
+  if(slot==4){//ICI
+    if(cardID.includes("pattern")){
+      if(cardID=="carte pattern composite"){
+        color="green";
+      }
+    }
     for (var i = 0; i < diagJSON.states.length; i++){
       if(diagJSON.states[i].class=='activeState1'){
         diagJSON.states[i].class = '';
         diagJSON.states[i].color = 'black';
       }
-      if(diagJSON.states[i].name==activeCards.get('slot4').name){
-        diagJSON.states[i].class = 'activeState1';
-        diagJSON.states[i].color = 'blue';
-      }
     }
+    recursiveUncolorElement(diagJSON);
+    recursiveColorElement(diagJSON, activeCards.get('slot4').name, color, 'activeState1');
+    
   }
+  
   if(slot==6){
-    let text = ["État actif 2"]
     for (var i = 0; i < diagJSON.states.length; i++){
       if(diagJSON.states[i].class=='activeState2'){
         diagJSON.states[i].class = '';
@@ -223,7 +254,6 @@ function activateCard(slot, cardID){//Tells the client which card was laid and w
   }
 
   if(slot==5){
-    let text = ["Transition active"]
     for (var i = 0; i < diagJSON.transitions.length; i++){
       if(diagJSON.transitions[i].class=='activeTransition'){
         diagJSON.transitions[i].class = '';
@@ -248,7 +278,7 @@ function renderSVG(source, socket = io.sockets){
 }
 
 function addNestedState(cardID){
-  let nestedStateName="état composite " + stateNumber.toString();
+  let nestedStateName="état composite " + elemIndex.nested.toString();
   let newDiag = {
     "transitions": [
     ],
@@ -256,13 +286,14 @@ function addNestedState(cardID){
         {
           "name": nestedStateName,
           "type": "regular",
-          "statemachine": diagJSON
+          "statemachine": diagJSON,
+          "class" : "nested"
         }
     ]
   };
   diagJSON = newDiag;
-  //knownCards.set(cardID, obj);
-  stateNumber =((parseInt(stateNumber,36)+1).toString(36)).replace(/0/g,'');//Incrementation of state name 
+  knownCards.set(cardID, newDiag.states[0]);
+  elemIndex.nested =((parseInt(elemIndex.nested,36)+1).toString(36)).replace(/0/g,'');//Incrementation of state name 
 
   renderSVG(diagJSON);
 }
@@ -270,7 +301,7 @@ function addNestedState(cardID){
 function addState(cardID, type){//Add a new state in the diagram
   //s = new model.State(name,type);
   //s.addToStateList();
-  let stateName="état " + stateNumber.toString();
+  let stateName="état " + elemIndex.state.toString();
   let obj = {
      name: stateName,
      type: type
@@ -279,7 +310,7 @@ function addState(cardID, type){//Add a new state in the diagram
   knownCards.set(cardID, obj);
   console.log(knownCards);
   diagJSON["states"].push(obj);
-  stateNumber =((parseInt(stateNumber,36)+1).toString(36)).replace(/0/g,'');//Incrementation of state name 
+  elemIndex.state =((parseInt(elemIndex.state,36)+1).toString(36)).replace(/0/g,'');//Incrementation of state name 
   renderSVG(diagJSON);
 }
 
@@ -375,13 +406,13 @@ function addTransition(cardID){
     obj = {
       from: from,
       to: to,
-      label: transitionNumber,
-      event: transitionNumber
+      label: "transition " + elemIndex.transition,
+      event: "transition " + elemIndex.transition
     }
     transitionList.push(transitionName);
     knownCards.set(cardID, obj);
     diagJSON["transitions"].push(obj); 
-    transitionNumber =((parseInt(transitionNumber,36)+1).toString(36)).replace(/0/g,''); 
+    elemIndex.transition =((parseInt(elemIndex.transition,36)+1).toString(36)).replace(/0/g,''); 
     renderSVG(diagJSON);
   }
 }
@@ -423,24 +454,32 @@ function setTransitionAction(cardID, slot, name = 'action'){//condition entry ex
   }
 }
 
+function recursiveRename(root, stateName, newName){
+  for (var i = 0; i < root.states.length; i++){
+    console.log(root.states[i]);
+    if(root.states[i].name==stateName){
+      root.states[i].name = newName;
+      stateNames.pop(stateName);
+      stateNames.push(newName);
+      for (let [key, value] of knownCards.entries()) {//If old name in the knownCards map, replace it by the new one
+        if (value.name === stateName){
+          value.name = newName;
+        }
+      }
+      return;
+    }else if(root.states[i].statemachine != null){
+      recursiveRename(root.states[i].statemachine, stateName, newName);
+    }
+  }
+}
+
 function renameS(names, type){
   let oldName=names[0];
   let newName=names[1];
   if(type=="state"){
     if(!stateNames.includes(newName)){//If the newName doesnt already exist
-      for (var i = 0; i < diagJSON.states.length; i++){
-        if(diagJSON.states[i].name==oldName){
-          diagJSON.states[i].name=newName;
-        }
-        stateNames.pop(oldName);
-        stateNames.push(newName);
-        for (let [key, value] of knownCards.entries()) {//If old name in the knownCards map, replace it by the new one
-          if (value.name === oldName){
-            value.name = newName;
-          }
-        }
-      }
-      console.log(diagJSON);
+      recursiveRename(diagJSON, oldName, newName);
+      //console.log(diagJSON);
       for (var i = 0; i < diagJSON.transitions.length; i++){
         if(diagJSON.transitions[i].from==oldName){
           diagJSON.transitions[i].from=newName;
@@ -455,7 +494,7 @@ function renameS(names, type){
     for (var i = 0; i < diagJSON.transitions.length; i++){
       if(diagJSON.transitions[i].event==oldName){
         buildTransitionLabel(diagJSON.transitions[i], newName);
-        console.log(diagJSON);
+        //console.log(diagJSON);
       }
     }
     console.log(names);
