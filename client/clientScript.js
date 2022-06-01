@@ -9,9 +9,14 @@ var selectedElem;
 ////////////////////
 //SERVER RECEIVING//
 ////////////////////
+
 socket.on('svg', (svg) => {//Listening on socket
     renderSVG(socket,svg);
 });
+
+socket.on('notification', (notif) =>{
+    notify(notif);
+})
 
 socket.on('cardChange',(change)=> {
     console.log(change)
@@ -138,11 +143,9 @@ function colorTextElement(elem,color="blue"){
 }
 
 
-
-
 function markActivated(){//Add blink animation on elements activated by their card
-    let stateLeft = $('.activeState1').children("text").html() ? $('.activeState1').children("text").html():'' ;
-    let stateRight = $('.activeState2').children("text").html() ? $('.activeState2').children("text").html():'';
+    let stateLeft = $('.activeState1').children("title").html() ? $('.activeState1').children("title").html():'' ;
+    let stateRight = $('.activeState2').children("title").html() ? $('.activeState2').children("title").html():'';
     let transition = $('.activeTransition').children("title").html() ;
 
 
@@ -164,7 +167,17 @@ function markActivated(){//Add blink animation on elements activated by their ca
     }else{
         $("#spanCard2").html("");
     }
+}
 
+function notify(notification){
+    $.toast({
+        heading: notification.title,
+        text: notification.text,
+        position: 'bottom-center',
+        stack: false,
+        hideAfter: notification.duration,
+        loaderBg: '#FFFFFF', 
+    });
 }
 
 ////////////////////////
@@ -198,21 +211,25 @@ function deselect(elem){
 
 function editDialog(){
     let oldName;
-
+    let height = 400;
     if(selectedType=="state"){
+
         oldName = $(".selected").children("text").html()
         if(selectedElem.actions==undefined){
             $('label[for=input2], input#input2').hide();
             $('label[for=input3], input#input3').hide();
+            height = 250;
         }else if (selectedElem.actions.length > 0) {
+            $('label[for=input3], input#input3').hide();
             $('label[for=input2], input#input2').show();
-            $('label[for=input3], input#input3').show();
-            console.log(selectedElem.actions[0].type);
             $('label[for=input2]').html(selectedElem.actions[0].type);
-            $('#input2').val(selectedElem.actions[0].body)
+            $('#input2').val(selectedElem.actions[0].body);
+            height = 300;
             if (selectedElem.actions.length > 1) {
+                $('label[for=input3], input#input3').show();
                 $('label[for=input3]').html(selectedElem.actions[1].type);
                 $('#input3').val(selectedElem.actions[1].body)
+                height = 350;
             }
         }
 
@@ -220,13 +237,12 @@ function editDialog(){
     
     }else if(selectedType=="transition"){
         oldName = selectedElem.event;
-        console.log("YAHAAA")
     }
 
 
     $("#name").val(oldName);
     dialog= $( "#dialog" ).dialog({
-        height: 400,
+        height: height,
         width: 350,
         modal: true,
         buttons: {
@@ -247,34 +263,48 @@ function rename(){//Condition sur l'élément selectionné
     let newName= $("#name").val();
     let newAction1= $("#input2").val();
     let newAction2= $("#input3").val();
-    let obj = {
-        name: '',
-        action1 : '',
-        action2 : ''
+    let elem = {
+        oldName: '',
+        newName: undefined,
+        action1 : undefined,
+        action2 : undefined,
+        cond : undefined,
+        action : undefined,
     }
+    let rename = Array();
+    rename = false;
     if(selectedType=="state"){
-        oldName = $(".selected").children("title").html()
-        if(oldName!=newName && newName!==null){//Changing state name
-            let rename = Array();
-            rename[0]=oldName;
-            rename[1]=newName;
-            socket.emit('rename',rename, "state");
-            linkSVG();
-        }
-        if(newAction1!==null){
+        elem.oldName = selectedElem.name;
 
+        if(elem.oldName!=newName && newName!==null){//Changing state name
+            elem.newName = newName;  
         }
+
+        if(selectedElem.actions){
+            if(newAction1!=selectedElem.actions[0] && newAction1!==null){//Changing state first action
+                elem.action1 = newAction1;
+            }
+
+            if(newAction2!=selectedElem.actions[1] && newAction2!==null){//Changing state second action
+                elem.action2 = newAction2;
+            }
+        }
+
+        socket.emit('rename',elem, "state");//Sending request to server
+        linkSVG();
+
+
     }else if(selectedType=="transition"){
-        oldName = $(".selected").children("text").html().replace(/&nbsp;/g, '').replace(/\[.*\]/g, '').trim();
-        if(oldName!=newName && newName!==null){
-            let rename = Array();
-            rename[0]=oldName;
-            rename[1]=newName;
-            socket.emit('rename',rename, "transition");
-            linkSVG();
+        elem.oldName = $(".selected").children("text").html().replace(/&nbsp;/g, '').replace(/\[.*\]/g, '').trim();
+
+        if(elem.oldName!=newName && newName!==null){
+            elem.newName = newName;
         }else{
             resetSelected();
         }
+
+        socket.emit('rename',elem, "transition");
+        linkSVG();
     }
     dialog.dialog( "close" );
 
