@@ -5,6 +5,7 @@ var selectedType;
 var slot=Array();
 var dialog;
 var selectedElem;
+var notif;
 
 ////////////////////
 //SERVER RECEIVING//
@@ -57,16 +58,16 @@ $(document).ready(function(){
             svgRoot = $('svg');
             
             $(svgRoot).attr({
-            id: 'svgDiagram',
-            width:'70%',
-            height:'70%',
+                id: 'svgDiagram',
+                width:'70%',
+                height:'70%',
             });
             $("#rename").css("display","none");
 
             if($(".state",svgRoot).length) {
-                $("#empty").css("display","none");
+                empty(false);
             }else{
-                $("#empty").css("display","");
+                empty(true);
             }
 
             clearListeners();
@@ -169,15 +170,38 @@ function markActivated(){//Add blink animation on elements activated by their ca
     }
 }
 
-function notify(notification){
-    $.toast({
+function notify(notification, link= false){
+    let notifObj = {
         heading: notification.title,
         text: notification.text,
-        position: 'bottom-center',
+        position: notification.position ? notification.position:'bottom-center',
         stack: false,
+        allowToastClose: notification.close ? notification.close:true,
         hideAfter: notification.duration,
-        loaderBg: '#FFFFFF', 
-    });
+        loaderBg: '#FFFFFF'
+    } 
+    if(link){
+        notif = $.toast(notifObj);
+    }else{
+        $.toast(notifObj);
+    }
+}
+
+function empty(isEmpty){
+    if (isEmpty){
+        let notif = {
+            title : "Le diagramme est vide",
+            text : "Posez une carte pour commencer",
+            position : 'mid-center',
+            duration : false,
+            close : false
+        }
+        notify(notif, true);
+    }else{
+        if(notif){
+            notif.reset();
+        }
+    }
 }
 
 ////////////////////////
