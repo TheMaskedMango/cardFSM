@@ -1,4 +1,4 @@
-
+var svgRoot;
 var socket = io();
 var direction = "top-bottom";//demande au serv bouffon
 var selectedType;
@@ -204,6 +204,19 @@ function empty(isEmpty){
     }
 }
 
+function download(){//Download the displayed svg in SVG format
+    console.log(svgRoot)
+    var svgData = svgRoot[0].outerHTML.replace(/&nbsp;/g,"")
+    var svgBlob = new Blob([svgData], {type:"image/svg+xml;charset=utf-8"});
+    var svgUrl = URL.createObjectURL(svgBlob);
+    var downloadLink = document.createElement("a");
+    downloadLink.href = svgUrl;
+    downloadLink.download = "newesttree.svg";
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+}
+
 ////////////////////////
 //SERVER COMMUNICATING//
 ////////////////////////
@@ -270,10 +283,11 @@ function editDialog(){
         width: 350,
         modal: true,
         buttons: {
-          "Appliquer": rename,
-          "Annuler": function() {
-            dialog.dialog( "close" );
-          }
+            "Supprimer": deleteElem,
+            "Appliquer": rename,
+            // "Annuler": function() {
+            // dialog.dialog( "close" );
+            // }
         },
         close: function() {
             resetSelected();
@@ -282,7 +296,12 @@ function editDialog(){
     
 }
 
-function rename(){//Condition sur l'élément selectionné
+function deleteElem(){//Deletes the selected element
+    socket.emit('delete',selectedElem, selectedType);//Sending request to server
+    dialog.dialog( "close" );
+}
+
+function rename(){//Renames the selected element
     let oldName;
     let newName= $("#name").val();
     let newAction1= $("#input2").val();
@@ -337,7 +356,7 @@ function rename(){//Condition sur l'élément selectionné
 function clearListeners(){//Remove the click listeners to free memory
     $(".state.regular polygon",svgRoot).off();//Remove previous listeners
     $(".transition polygon",svgRoot).off();
-    $(".nested text",svgRoot).off();
+    $(".cluster text",svgRoot).off();
     console.log("listeners supprimés");
 }
 

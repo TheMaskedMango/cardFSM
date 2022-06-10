@@ -28,6 +28,8 @@ class Slot(wx.Panel):
         self.label = label
         self.number = number
         lbl = wx.StaticText(self, label=label)
+        font = wx.Font(10, wx.DECORATIVE, wx.ITALIC, wx.NORMAL)
+        lbl.SetFont(font)
 
 
         v_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -35,7 +37,7 @@ class Slot(wx.Panel):
         self.combo.Bind(wx.EVT_COMBOBOX, self.onCombo)
         v_sizer.Add(self.combo, 0, wx.ALL|wx.EXPAND|wx.BOTTOM, 10)
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(lbl, 0, wx.ALL|wx.CENTER, 5)
+        sizer.Add(lbl, 0, wx.ALL|wx.CENTER, 15)
         sizer.Add(v_sizer, 0, wx.ALL, 5)
 
 
@@ -60,7 +62,7 @@ class MainPanel(wx.Panel):
         hsizer2 = wx.BoxSizer(wx.HORIZONTAL)
         v_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        slots = [("plum","slot infos",listesCartesSlotEtat),
+        slots = [("plum","slot infos/mapping",listesCartesSlotEtat),
                   ("green","slot pattern",listesCartesSlotPattern),
                   ("coral","slot correction",listesCartesSlotEtat),
                   ("cyan","slot état 1",listesCartesSlotEtat+listesCartesSlotPattern),
