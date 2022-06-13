@@ -20,37 +20,37 @@ var activeCards= new Map([["slot1",""],["slot2",""],["slot3",""],
                           ["slot4",""],["slot5",""],["slot6",""],
                           ["slot7",""],["slot8",""],["slot9",""]]);
 
-                          var diagJSON=//JSON used to render the svg
-                          {
-                            "transitions": [
-                                {
-                                  "from":"initial",
-                                  "to":"ok",
-                                  "label":"début",
-                                  "event":"début"
-                                },
-                                {
-                                  "from":"ok",
-                                  "to":"final",
-                                  "label":"fin",
-                                  "event":"fin"
-                                }
-                            ],
-                            "states": [
-                                {
-                                  "name": "initial",
-                                  "type": "initial"
-                                },
-                                {
-                                  "name": "final",
-                                  "type": "final"
-                                },
-                                {
-                                  "name": "ok",
-                                  "type": "regular"
-                                }
-                            ]
-                          };
+var diagJSON=//JSON used to render the svg
+{
+  "transitions": [
+      {
+        "from":"initial",
+        "to":"ok",
+        "label":"début",
+        "event":"début"
+      },
+      {
+        "from":"ok",
+        "to":"final",
+        "label":"fin",
+        "event":"fin"
+      }
+  ],
+  "states": [
+      {
+        "name": "initial",
+        "type": "initial"
+      },
+      {
+        "name": "final",
+        "type": "final"
+      },
+      {
+        "name": "ok",
+        "type": "regular"
+      }
+  ]
+};
 
 
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -223,10 +223,16 @@ app.post('/card', (req, res) => {//Carte posée
   
 // }
 
-function recursiveFindStateByName(root, name){
+function recursiveFindStateByName(root, name, deleting = false){
   for (var i = 0; i < root.states.length; i++){
     if(root.states[i].name==name){
-      return root.states[i];
+      if (deleting){
+        root.states.splice(i,1);
+        return 0;
+      }else{
+        return root.states[i];
+      }
+
     }
   }
   for (var i = 0; i < root.states.length; i++){
@@ -504,20 +510,31 @@ function setTransitionAction(cardID, slot, name = 'action'){//condition entry ex
 }
 
 function deleteS(elem,type){
+  
   if(type=="state"){
     console.log(elem.name);
-    let state = recursiveFindStateByName(diagJSON, elem.name);
-    delete state;
-    for (var i = 0; i < diagJSON.transitions.length; i++){
+    let success = recursiveFindStateByName(diagJSON, elem.name, true);
+    const indexes = [];
+    for (var i = 0; i < diagJSON.transitions.length; i++){//Delete transitions associated with the state
+      console.log('zouiw');
       if(diagJSON.transitions[i].from==elem.name){
-        delete diagJSON.transitions[i];
+        indexes.push(i);
       }
       if(diagJSON.transitions[i] && diagJSON.transitions[i].to==elem.name){
-        delete diagJSON.transitions[i];
+        indexes.push(i);
       }
+    } 
+    for (var i = indexes.length - 1; i >= 0; i--) {
+      diagJSON.transitions.splice(i,1);
     }
 
-    
+  }else if(type=="transition"){
+    for (var i = 0; i < diagJSON.transitions.length; i++){
+      if(diagJSON.transitions[i].label==elem.label){
+        diagJSON.transitions.splice(i,1);
+      }
+    } 
+    console.log(elem);
   }
   console.log("AAAAAAAAAAAAAAAH");
   console.log(diagJSON)

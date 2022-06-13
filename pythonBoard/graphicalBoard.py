@@ -1,7 +1,8 @@
 import wx
 import requests
 
-listesCartesSlotEtat = ["carte état initial","carte état final","carte état test","carte état 1","carte état 2","carte état 3","carte état 4"]
+#listesCartesSlotEtat = ["carte état initial","carte état final","carte état test","carte état 1","carte état 2","carte état 3","carte état 4"]
+listesCartesSlotEtat = ["carte état initial","carte état final","carte état","carte mapping", "carte mapping 2"]
 listesCartesSlotSpecEtat = ["carte entry","carte exit"]
 listesCartesSlotSpecTransition = ["carte garde","carte action"]
 listesCartesSlotTransition = ["transition gauche-droite","transition droite-gauche","transition gauche-gauche","transition droite-droite"]
