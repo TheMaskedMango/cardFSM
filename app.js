@@ -385,7 +385,7 @@ function addNestedState(cardID){
   deactivateElement(diagJSON,'activeState1');
   deactivateElement(diagJSON,'activeState2');
   diagJSON = newDiag;
-  knownCards= new Map([[cardID,newDiag.states[0]]]);//Unlink all cards from existing states
+  knownCards.set(cardID,newDiag.states[0]);//Unlink all cards from existing states
   elemIndex.nested =((parseInt(elemIndex.nested,36)+1).toString(36)).replace(/0/g,'');//Incrementation of state name 
   renderSVG(diagJSON);
 }
@@ -549,7 +549,7 @@ function deleteS(elem,type){
   
   if(type=="state"){
     console.log(elem.name);
-    let success = recursiveFindStateByName(diagJSON, elem.name, true);
+    recursiveFindStateByName(diagJSON, elem.name, true);
     const indexes = [];
     for (var i = 0; i < diagJSON.transitions.length; i++){//Delete transitions associated with the state
       console.log('zouiw');
@@ -563,6 +563,12 @@ function deleteS(elem,type){
     for (var i = indexes.length - 1; i >= 0; i--) {
       diagJSON.transitions.splice(i,1);
     }
+    knownCards.forEach((value, key) => {
+      if(key.includes('mapping') && value.name==elem.name){
+        knownCards.delete(key);
+      }
+    });
+    console.log(knownCards)
 
   }else if(type=="transition"){
     for (var i = 0; i < diagJSON.transitions.length; i++){
