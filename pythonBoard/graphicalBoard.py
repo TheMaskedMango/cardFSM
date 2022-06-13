@@ -2,7 +2,8 @@ import wx
 import requests
 
 #listesCartesSlotEtat = ["carte état initial","carte état final","carte état test","carte état 1","carte état 2","carte état 3","carte état 4"]
-listesCartesSlotEtat = ["carte état initial","carte état final","carte état","carte mapping", "carte mapping 2"]
+listesCartesSlotEtat = ["carte état initial","carte état final","carte état"]
+listesCartesSlotInfosMapping = ["carte mapping", "carte mapping 2"]
 listesCartesSlotSpecEtat = ["carte entry","carte exit"]
 listesCartesSlotSpecTransition = ["carte garde","carte action"]
 listesCartesSlotTransition = ["transition gauche-droite","transition droite-gauche","transition gauche-gauche","transition droite-droite"]
@@ -63,12 +64,12 @@ class MainPanel(wx.Panel):
         hsizer2 = wx.BoxSizer(wx.HORIZONTAL)
         v_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        slots = [("plum","slot infos/mapping",listesCartesSlotEtat),
+        slots = [("plum","slot infos/mapping",listesCartesSlotInfosMapping),
                   ("green","slot pattern",listesCartesSlotPattern),
                   ("coral","slot correction",listesCartesSlotEtat),
-                  ("cyan","slot état 1",listesCartesSlotEtat+listesCartesSlotPattern),
+                  ("cyan","slot état 1",listesCartesSlotEtat+listesCartesSlotPattern+listesCartesSlotInfosMapping),
                   ("red","slot transition",listesCartesSlotTransition),
-                  ("turquoise","slot état 2",listesCartesSlotEtat+listesCartesSlotPattern),
+                  ("turquoise","slot état 2",listesCartesSlotEtat+listesCartesSlotPattern+listesCartesSlotInfosMapping),
                   ("pink","slot spécialisation état 1",listesCartesSlotSpecEtat),
                   ("pink","slot spécialisation transition",listesCartesSlotSpecTransition),
                   ("pink","slot spécialisation état 2",listesCartesSlotSpecEtat)]

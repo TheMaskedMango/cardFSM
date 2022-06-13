@@ -19,10 +19,9 @@ socket.on('notification', (notif) =>{
     notify(notif);
 })
 
-socket.on('cardChange',(change)=> {
-    console.log(change)
-    slot[parseInt(change.slot,10)] = change.card;
-    //markActivated();
+socket.on('cardMapping',(type)=> {
+    resetSelected();
+    greyTransitions();
 });
 
 socket.on('infos',(infos)=> {
@@ -73,19 +72,21 @@ $(document).ready(function(){
             clearListeners();
             $(".state.regular polygon",svgRoot).click(function() {//Listeners states
                 console.log($(this).parent().children("title").html());
-                toggleSelectedState($(this),"blue");
+                toggleStateColorAndClass($(this),"blue");
             });
+
+            //Ajouter des listeners pour les états initial et final, sur le premier attribut ellipse
 
             $(".cluster text",svgRoot).click(function() {//Listeners nested (composite) states
                 console.log($(this).parent().children("title").html());
-                toggleSelectedState($(this),"green");
+                toggleStateColorAndClass($(this),"green");
             });
             
             
             $(".transition polygon",svgRoot).click(function() {//Listeners transitions
                 stateArray = $(this).parent().children("title").html().split("-&gt;");
                 console.log("source: "+stateArray[0]+"  destination: "+stateArray[1]);
-                toggleSelectedTransition($(this),stateArray);
+                toggleTransitionColorAndClass($(this),"red");
             });
             markActivated();
 
@@ -102,49 +103,51 @@ function resetSelected(){//Remove any selected element status
     $("#rename").css("display","none");
     $(".state, .transition",svgRoot).removeClass("selected");
     $(".state, .transition",svgRoot).children("text").attr("fill","black");
-    //$(".state, .transition",svgRoot).children("polygon").attr("fill","black");
-    //$(".transition",svgRoot).children("polygon").attr("stroke","black");
+    $(".state, .transition",svgRoot).children("polygon").attr("fill","black");
+    $(".transition",svgRoot).children("polygon").attr("stroke","black");
+    $(".transition",svgRoot).children("path").attr("stroke","black");
 }   
 
-function toggleSelectedState(elem, color) {
+function toggleStateColorAndClass(elem, color, class_ = 'selected') {
     //console.log(elem);
-    if(elem.parent().hasClass("selected")){
+    if(elem.parent().hasClass(class_)){
         console.log("déselectionné");
         $("#rename").css("display","none");
         elem.parent().children("text").attr("fill","black");
-        elem.parent().removeClass("selected");
+        elem.parent().removeClass(class_);
         deselect(elem);
     }else{
         console.log("selectionné");
         resetSelected();
         $("#rename").css("display","");
-        colorTextElement(elem, color);
-        elem.parent().addClass("selected");
+        colorTextElement(elem.parent(), color);
+        elem.parent().addClass(class_);
         select(elem,"state");
     }
 }
 
-function toggleSelectedTransition(elem, states) {
-    if(elem.parent().hasClass("selected")){//If already selected
-        colorTextElement(elem,"black");
-        elem.parent().removeClass("selected");
+function toggleTransitionColorAndClass(elem, color = "red", class_ = 'selected') {
+    if(elem.parent().hasClass(class_)){//If already selected
+        colorTextElement(elem.parent(),"black");
+        elem.parent().removeClass(class_);
         $("#rename").css("display","none");
         deselect(elem);
+
     }else{
         resetSelected();
         $("#rename").css("display","");
-        colorTextElement(elem,"red");
-        elem.parent().addClass("selected");
+        colorTextElement(elem.parent(),color);
+        elem.parent().addClass(class_);
         select(elem,"transition");
     }
 }
 
 function colorTextElement(elem,color="blue"){
-    elem.parent().children("text").attr("fill",color);
+    elem.children("text").attr("fill",color);
 }
 
 
-function markActivated(){//Add blink animation on elements activated by their card
+function markActivated(){
     let stateLeft = $('.activeState1').children("title").html() ? $('.activeState1').children("title").html():'' ;
     let stateRight = $('.activeState2').children("title").html() ? $('.activeState2').children("title").html():'';
     let transition = $('.activeTransition').children("title").html() ;
@@ -170,10 +173,22 @@ function markActivated(){//Add blink animation on elements activated by their ca
     }
 }
 
+function greyTransitions(){
+    $(".transition polygon",svgRoot).off();//Prevent from clicking on a transition
+    $(".transition",svgRoot).each( function(){
+
+        $(this).children("polygon").attr("fill","grey");
+        $(this).children("polygon").attr("stroke","grey");
+        $(this).children("path").attr("stroke","grey");
+        colorTextElement($(this),"grey");
+    });
+}
+
 function notify(notification, link= false){
     let notifObj = {
         heading: notification.title,
         text: notification.text,
+        icon: notification.icon ? notification.icon:null,
         position: notification.position ? notification.position:'bottom-center',
         stack: false,
         allowToastClose: notification.close ? notification.close:true,
@@ -245,6 +260,9 @@ function deselect(elem){
     }
 }
 
+function mapCardToState(){
+    greyTransitions();
+}
 
 function editDialog(){
     let oldName;
