@@ -6,6 +6,7 @@ var slot=Array();
 var dialog;
 var selectedElem;
 var notif;
+var greyed = false;
 
 ////////////////////
 //SERVER RECEIVING//
@@ -82,7 +83,7 @@ $(document).ready(function(){
                 toggleStateColorAndClass($(this),"green");
             });
             
-            
+            $(".transition text",svgRoot).attr("fill","black");//Because of how the smcat render function color transition
             $(".transition polygon",svgRoot).click(function() {//Listeners transitions
                 stateArray = $(this).parent().children("title").html().split("-&gt;");
                 console.log("source: "+stateArray[0]+"  destination: "+stateArray[1]);
@@ -96,16 +97,20 @@ $(document).ready(function(){
        }
     }, 100);
    //the svg doc is loaded asynchronouslys
-   }
+}
 
 function resetSelected(){//Remove any selected element status
     deselect();
     $("#rename").css("display","none");
     $(".state, .transition",svgRoot).removeClass("selected");
     $(".state, .transition",svgRoot).children("text").attr("fill","black");
-    $(".state, .transition",svgRoot).children("polygon").attr("fill","black");
-    $(".transition",svgRoot).children("polygon").attr("stroke","black");
-    $(".transition",svgRoot).children("path").attr("stroke","black");
+    if(greyed){
+        greyed=false;
+        $(".state, .transition",svgRoot).children("polygon").attr("fill","black");
+        $(".transition",svgRoot).children("polygon").attr("stroke","black");
+        $(".transition",svgRoot).children("path").attr("stroke","black");
+    }
+
 }   
 
 function toggleStateColorAndClass(elem, color, class_ = 'selected') {
@@ -176,12 +181,12 @@ function markActivated(){
 function greyTransitions(){
     $(".transition polygon",svgRoot).off();//Prevent from clicking on a transition
     $(".transition",svgRoot).each( function(){
-
         $(this).children("polygon").attr("fill","grey");
         $(this).children("polygon").attr("stroke","grey");
         $(this).children("path").attr("stroke","grey");
         colorTextElement($(this),"grey");
     });
+    greyed=true;
 }
 
 function notify(notification, link= false){
@@ -206,8 +211,8 @@ function empty(isEmpty){
     if (isEmpty){
         let notif = {
             title : "Le diagramme est vide",
-            text : "Posez une carte pour commencer",
-            position : 'mid-center',
+            text : "Poser une carte pour commencer",
+            position : 'bottom-center',
             duration : false,
             close : false
         }
@@ -240,7 +245,7 @@ function download(){//Download the displayed svg in SVG format
 function select(elem, type){
     let name = elem.parent().children("text").html();
     if(type=='transition'){
-        name = name.replace(/&nbsp;/g, '').trim();
+        name = name.replace(/&nbsp;/g, '').replace(/\[.*\]/g, '').replace(/\\.*/g, '').trim();
     }
     let obj={
         name: name,
@@ -292,6 +297,21 @@ function editDialog(){
     
     }else if(selectedType=="transition"){
         oldName = selectedElem.event;
+        if(selectedElem.cond==undefined){
+            $('label[for=input2], input#input2').hide();
+        }else{
+            $('label[for=input2], input#input2').show();
+            $('label[for=input2]').html("garde");
+            $('#input2').val(selectedElem.cond);
+        }
+        if (selectedElem.action==undefined){
+            $('label[for=input3], input#input3').hide();
+        }else{
+            $('label[for=input3], input#input3').show();
+            $('label[for=input3]').html("action");
+            $('#input3').val(selectedElem.action);
+        }
+        
     }
 
 
@@ -320,10 +340,7 @@ function deleteElem(){//Deletes the selected element
 }
 
 function rename(){//Renames the selected element
-    let oldName;
     let newName= $("#name").val();
-    let newAction1= $("#input2").val();
-    let newAction2= $("#input3").val();
     let elem = {
         oldName: '',
         newName: undefined,
@@ -332,9 +349,9 @@ function rename(){//Renames the selected element
         cond : undefined,
         action : undefined,
     }
-    let rename = Array();
-    rename = false;
     if(selectedType=="state"){
+        let newAction1= $("#input2").val();
+        let newAction2= $("#input3").val();
         elem.oldName = selectedElem.name;
 
         if(elem.oldName!=newName && newName!==null){//Changing state name
@@ -356,14 +373,19 @@ function rename(){//Renames the selected element
 
 
     }else if(selectedType=="transition"){
-        elem.oldName = $(".selected").children("text").html().replace(/&nbsp;/g, '').replace(/\[.*\]/g, '').trim();
+        elem.oldName = $(".selected").children("text").html().replace(/&nbsp;/g, '').replace(/\[.*\]/g, '').replace(/\\.*/g, '').trim();
 
         if(elem.oldName!=newName && newName!==null){
             elem.newName = newName;
-        }else{
-            resetSelected();
         }
-
+        
+        if(selectedElem.cond){
+            elem.cond=$("#input2").val();
+        }
+        if(selectedElem.action){
+            elem.action=$("#input3").val();
+        }
+        console.log(elem);
         socket.emit('rename',elem, "transition");
         linkSVG();
     }
@@ -372,7 +394,7 @@ function rename(){//Renames the selected element
 }
 
 function clearListeners(){//Remove the click listeners to free memory
-    $(".state.regular polygon",svgRoot).off();//Remove previous listeners
+    $(".state.regular polygon",svgRoot).off();
     $(".transition polygon",svgRoot).off();
     $(".cluster text",svgRoot).off();
     console.log("listeners supprimés");

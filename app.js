@@ -4,6 +4,7 @@ const bodyParser = require('body-parser')
 const smcat = require("state-machine-cat");
 const http = require('http');
 const { Server } = require("socket.io"); 
+const { LOADIPHLPAPI } = require("dns");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -13,40 +14,35 @@ var direction = 'left-right';
 var selectedElements = Array();
 var elemIndex = {initial : 'a', final : 'a', regular : 'a', transition : 'a', nested : 'a'};
 var stateNames=Array();
-var transitionList=Array();
 var mapping = null;
-var knownCards= new Map([["carte état initial",{ name: 'initial', type: 'initial' }],["carte état final",{ name: 'final', type: 'final' }],["carte état test",{ name: 'ok', type: 'regular' }]]);
+var knownCards= new Map();
 var activeCards= new Map([["slot1",""],["slot2",""],["slot3",""],
                           ["slot4",""],["slot5",""],["slot6",""],
                           ["slot7",""],["slot8",""],["slot9",""]]);
-
+var saveState;
 var diagJSON=//JSON used to render the svg
 {
   "transitions": [
       {
-        "from":"initial",
-        "to":"ok",
-        "label":"début",
-        "event":"début"
+        "from":"Bouton relâché",
+        "to":"Bouton pressé",
+        "label":"Appuyer",
+        "event":"Appuyer"
       },
       {
-        "from":"ok",
-        "to":"final",
-        "label":"fin",
-        "event":"fin"
+        "from":"Bouton pressé",
+        "to":"Bouton relâché",
+        "label":"Relâcher",
+        "event":"Relâcher"
       }
   ],
   "states": [
       {
-        "name": "initial",
-        "type": "initial"
+        "name": "Bouton relâché",
+        "type": "regular"
       },
       {
-        "name": "final",
-        "type": "final"
-      },
-      {
-        "name": "ok",
+        "name": "Bouton pressé",
         "type": "regular"
       }
   ]
@@ -86,12 +82,11 @@ io.on('connection', (socket) => {
   });
 
   socket.on('rename', (elem, type) => {
-    console.log(elem);
     renameS(elem, type);
   });
 
   socket.on('selected', (elem, link) => {//Store the selected element name and type and send the info from the JSON to the client
-    selectedElements.push(elem.name);
+    //selectedElements.push(elem.name);
 
     if(elem.type=='state'){
       let state = recursiveFindStateByName(diagJSON,elem.name);
@@ -106,12 +101,10 @@ io.on('connection', (socket) => {
 
     }else if(elem.type=='transition'){
       console.log(elem.name);
-      for (var i = 0; i < diagJSON.transitions.length; i++){
-        if(diagJSON.transitions[i].label.trim() == elem.name){
-          console.log(diagJSON.transitions[i]);
-          socket.emit("infos",diagJSON.transitions[i]);
-        }
-      }
+      let transition = findTransitionByName(elem.name);
+      socket.emit("infos",transition);
+      console.log(transition);
+      
     }
   });
 
@@ -166,24 +159,37 @@ app.post('/card', (req, res) => {//Carte posée
             duration: 5000
           }
           sendNotification(notif);
+        }else if(cardID=='carte pattern enregistrable'){
+          saveDiagProgress();
+          res.send("diagramme actuel enregistré");
+          let notif = {
+            title: "Enregistrement",
+            text: "L'état actuel du diagramme a été associé à la carte",
+            duration: 5000
+          }
+          sendNotification(notif);
         }
 
       }
     }
 
     if(slot==4 || slot==6){//slots états
-       if((knownCards.has(cardID) && cardID.includes("mapping") ) || cardID.includes("pattern")){
+       if((knownCards.has(cardID) && cardID.includes("mapping") )){
          res.send("état existant");
        }else {
+        let notif 
         if(cardID.includes("initial")){
           addState(cardID, 'initial');
         }else if(cardID.includes("final")){
           addState(cardID, 'final');
         }else if(cardID.includes("état")){
           addState(cardID, 'regular');
+        }else if(cardID.includes("enregistrable")){
+          addPattern(cardID);
+          notif = {title: "Ajout d'un pattern", text: "Le pattern a été ajouté", duration: 3000};
         }
         res.send("carte posée sur slot état");
-        let notif = {title: "Ajout d'un état", text: "L'état a été ajouté", duration: 3000};
+        
         sendNotification(notif);
       }
     }
@@ -214,8 +220,10 @@ app.post('/card', (req, res) => {//Carte posée
     if(slot==8){//slot spec transition
       if(cardID=='carte garde'){
         setTransitionGuard(cardID,slot);
+        knownCards.set(cardID, 'garde');
       }else if(cardID=='carte action'){
         setTransitionAction(cardID,slot);
+        knownCards.set(cardID, 'action');
       }
       res.send("l'action a été ajoutée");
 
@@ -244,6 +252,14 @@ app.post('/card', (req, res) => {//Carte posée
   
 // }
 
+function findTransitionByName(name){
+  for (var i = 0; i < diagJSON.transitions.length; i++){
+    if(diagJSON.transitions[i].event==name){
+      return diagJSON.transitions[i];
+    }
+  }
+}
+
 function recursiveFindStateByName(root, name, deleting = false){
   for (var i = 0; i < root.states.length; i++){
     if(root.states[i].name==name){
@@ -261,6 +277,17 @@ function recursiveFindStateByName(root, name, deleting = false){
       return recursiveFindStateByName(root.states[i].statemachine, name);
     }
   }
+}
+
+function recursiveGetStateNames(root){
+  let stateNames = Array();
+  for (var i = 0; i < root.states.length; i++){
+    stateNames.push(root.states[i].name);
+    if(root.states[i].statemachine != null){
+      stateNames.push(...recursiveGetStateNames(root.states[i].statemachine));
+    }
+  }
+  return stateNames;
 }
 
 function recursiveFindStateByClass(root, className){
@@ -314,7 +341,7 @@ function activateCard(slot, cardID){//Tells the client which card was laid and w
   activeCards.set('slot'+slot,knownCards.get(cardID));
   console.log("--------------activeCards---------------");
   console.log(activeCards);
-
+  console.log("----------------------------------------");
 
   if(slot==4 || slot==6){
     let color = "blue";
@@ -335,9 +362,9 @@ function activateCard(slot, cardID){//Tells the client which card was laid and w
       class_ = 'activeState2';
     }
     deactivateElement(diagJSON,class_);
-    if(!cardID.includes("état")){
-      activateElement(diagJSON, activeCards.get(slotString).name, color, class_, nested);
-    }
+    // if(!cardID.includes("état")){
+    //   activateElement(diagJSON, activeCards.get(slotString).name, color, class_, nested);
+    // }
     renderSVG(diagJSON);
   }
 
@@ -367,6 +394,11 @@ function renderSVG(source, socket = io.sockets){
   }
 }
 
+function saveDiagProgress(){
+  saveState = JSON.parse(JSON.stringify(diagJSON));//Used to clone the diagram
+  console.log(diagJSON);
+}
+
 function addNestedState(cardID){
   let nestedStateName="état composite " + elemIndex.nested.toString();
   let transitions = diagJSON.transitions;
@@ -388,6 +420,36 @@ function addNestedState(cardID){
   knownCards.set(cardID,newDiag.states[0]);//Unlink all cards from existing states
   elemIndex.nested =((parseInt(elemIndex.nested,36)+1).toString(36)).replace(/0/g,'');//Incrementation of state name 
   renderSVG(diagJSON);
+}
+
+function recursiveAvoidSimilarNames(root,names, firstRoot){
+  for (var i = 0; i < root.states.length; i++){
+    if(root.states[i].statemachine != null){
+      recursiveAvoidSimilarNames(root.states[i].statemachine,names, firstRoot);
+    }
+    if(names.includes(root.states[i].name)){
+      const oldName = root.states[i].name;
+      root.states[i].name += ' (1)';
+      const newName = root.states[i].name;
+      // for (var i = 0; i < firstRoot.transitions.length; i++){
+      //   if(firstRoot.transitions[i].from==oldName){
+      //     firstRoot.transitions[i].from=newName;
+      //   }
+      //   if(firstRoot.transitions[i].to==oldName){
+      //     firstRoot.transitions[i].to=newName;
+      //   }
+      // }
+    }
+  }
+}
+
+function addPattern(cardID){
+  let diagNames = recursiveGetStateNames(diagJSON);
+  recursiveAvoidSimilarNames(saveState, diagNames, saveState);
+  diagJSON.states.push(...saveState.states);
+  console.log(diagNames);
+  //diagJSON.transitions.push(...saveState.transitions);
+
 }
 
 function addState(cardID, type){//Add a new state in the diagram
@@ -461,7 +523,6 @@ function addTransition(cardID){
   let to;
   let valid = false;
 
-  let transitionName;
   switch (cardID) {
     case 'transition gauche-droite':
       if(activeCards.get('slot4')!='' && activeCards.get('slot6')!=''){
@@ -493,15 +554,17 @@ function addTransition(cardID){
       break;
   }
   transitionName = from+"->"+to;
-  if(!transitionList.includes(transitionName) && valid){
+  if(valid){
     obj = {
       from: from,
       to: to,
       label: "transition " + elemIndex.transition,
       event: "transition " + elemIndex.transition
     }
-    transitionList.push(transitionName);
     knownCards.set(cardID, obj);
+    console.log("---------------knownCards-----------------");
+    console.log(knownCards);
+    console.log("------------------------------------------");
     diagJSON["transitions"].push(obj); 
     elemIndex.transition =((parseInt(elemIndex.transition,36)+1).toString(36)).replace(/0/g,''); 
     renderSVG(diagJSON);
@@ -509,40 +572,35 @@ function addTransition(cardID){
 }
 
 
-function setTransitionGuard(cardID, slot, name = 'condition'){//condition entry exit et slot 4 ou 6
+function setTransitionGuard(cardID, slot, cond = 'condition'){//condition entry exit et slot 4 ou 6
   if(slot==8 && activeCards.get('slot5')!=''){
-    for (var i = 0; i < diagJSON.transitions.length; i++){
-      if(diagJSON.transitions[i].label==activeCards.get('slot5').label){
-        diagJSON.transitions[i].cond=name;
-
-        if(diagJSON.transitions[i].action){
-          diagJSON.transitions[i].label=diagJSON.transitions[i].event +' ['+ diagJSON.transitions[i].cond +'] \\'+ diagJSON.transitions[i].action;
-        }else{
-          diagJSON.transitions[i].label=diagJSON.transitions[i].event +' ['+ diagJSON.transitions[i].cond +'] ';
-        }
-        console.log(diagJSON)
-        renderSVG(diagJSON);
-      }
-    }
+    let transition = findTransitionByName(activeCards.get('slot5').event);
+    createTransitionCondition(transition,cond);
+    renderSVG(diagJSON);
   }
 }
 
-function setTransitionAction(cardID, slot, name = 'action'){//condition entry exit et slot 4 ou 6
+function setTransitionAction(cardID, slot, action = 'action'){//condition entry exit et slot 4 ou 6
   if(slot==8 && activeCards.get('slot5')!=''){
-    for (var i = 0; i < diagJSON.transitions.length; i++){
-      if(diagJSON.transitions[i].label==activeCards.get('slot5').label){
-        diagJSON.transitions[i].action=name;
-
-        if(diagJSON.transitions[i].cond){
-          diagJSON.transitions[i].label=diagJSON.transitions[i].event +' ['+ diagJSON.transitions[i].cond +'] \\'+ diagJSON.transitions[i].action;
-        }else{
-          diagJSON.transitions[i].label=diagJSON.transitions[i].event +' \\'+ diagJSON.transitions[i].action +' ';
-        }
-        console.log(diagJSON)
-        renderSVG(diagJSON);
-      }
-    }
+    let transition = findTransitionByName(activeCards.get('slot5').event);
+    createTransitionAction(transition,action);
+    renderSVG(diagJSON);
   }
+}
+
+function deleteAssociatedTransitions(stateName){
+  let indexes = [];
+  for (var i = 0; i < diagJSON.transitions.length; i++){
+    if(diagJSON.transitions[i].from==stateName){
+      indexes.push(i);
+    }
+    if(diagJSON.transitions[i] && diagJSON.transitions[i].to==stateName){
+      indexes.push(i);
+    }
+  } 
+  for (var i = indexes.length - 1; i >= 0; i--) {
+    diagJSON.transitions.splice(i,1);
+}
 }
 
 function deleteS(elem,type){
@@ -550,19 +608,12 @@ function deleteS(elem,type){
   if(type=="state"){
     console.log(elem.name);
     recursiveFindStateByName(diagJSON, elem.name, true);
-    const indexes = [];
-    for (var i = 0; i < diagJSON.transitions.length; i++){//Delete transitions associated with the state
-      console.log('zouiw');
-      if(diagJSON.transitions[i].from==elem.name){
-        indexes.push(i);
-      }
-      if(diagJSON.transitions[i] && diagJSON.transitions[i].to==elem.name){
-        indexes.push(i);
-      }
-    } 
-    for (var i = indexes.length - 1; i >= 0; i--) {
-      diagJSON.transitions.splice(i,1);
+    if(elem.statemachine){
+      elem.statemachine.states.forEach((state) => {
+        deleteAssociatedTransitions(state.name);
+      });
     }
+    deleteAssociatedTransitions(elem.name);
     knownCards.forEach((value, key) => {
       if(key.includes('mapping') && value.name==elem.name){
         knownCards.delete(key);
@@ -578,7 +629,6 @@ function deleteS(elem,type){
     } 
     console.log(elem);
   }
-  console.log("AAAAAAAAAAAAAAAH");
   console.log(diagJSON)
   renderSVG(diagJSON);
 }
@@ -609,27 +659,69 @@ function renameS(elem, type){
       console.log(diagJSON)
     }
   }else if(type=="transition"){
-    for (var i = 0; i < diagJSON.transitions.length; i++){
-      if(diagJSON.transitions[i].event==elem.oldName){
-        buildTransitionLabel(diagJSON.transitions[i], elem.newName);
-        //console.log(diagJSON);
-      }
+    console.log("--------------elem-------------");
+    console.log(elem);
+    console.log("-------------------------------");
+    let transition = findTransitionByName(elem.oldName);
+    let name=elem.oldName;
+    let cond = null;
+    let action = null;
+    if(elem.newName){
+      name = elem.newName;
     }
-    //console.log(names);
+    if(elem.cond){
+      cond = elem.cond;
+    }
+    if(elem.action){
+      action = elem.action;
+    }
+
+    buildTransitionLabel(transition, name, cond, action);
+
   }
   renderSVG(diagJSON);
 }
 
-function buildTransitionLabel(transition, name){
+function createTransitionCondition(transition, cond){
+  transition.label = transition.event;
+  transition.cond = cond;
+  transition.label += ' ['+cond+'] ';
+  if(transition.action){
+    transition.label +=' \\' + transition.action;
+  }
+}
+
+function createTransitionAction(transition, action){
+  transition.label = transition.event;
+  transition.action = action;
+  if(transition.cond){
+    transition.label += ' ['+transition.cond+'] ';
+  }
+  transition.label +=' \\' + action;
+}
+
+function buildTransitionLabel(transition, name, cond, action){//name, cond and action are texts to to change, if null keeping the actual one
   transition.event = name;
   transition.label = transition.event;
   if(transition.cond){
-    transition.label += ' ['+transition.cond+'] ';
+    if(!cond){
+      cond = transition.cond;
+    }
+    transition.cond = cond;
+    transition.label += ' ['+cond+'] ';
     if(transition.action){
-      transition.label +=' \\' + transition.action;
+      if(!action){
+        action = transition.action;
+      }
+      transition.action=action;
+      transition.label +=' \\' + action;
     }
   }else if(transition.action){
-    transition.label +=' \\'+transition.action;
+    if(!action){
+      action = transition.action;
+    }
+    transition.action=action;
+    transition.label +=' \\'+action;
   }
 }
 

@@ -1,5 +1,6 @@
 import wx
 import requests
+import os
 
 #listesCartesSlotEtat = ["carte état initial","carte état final","carte état test","carte état 1","carte état 2","carte état 3","carte état 4"]
 listesCartesSlotEtat = ["carte état initial","carte état final","carte état"]
@@ -7,7 +8,7 @@ listesCartesSlotInfosMapping = ["carte mapping", "carte mapping 2"]
 listesCartesSlotSpecEtat = ["carte entry","carte exit"]
 listesCartesSlotSpecTransition = ["carte garde","carte action"]
 listesCartesSlotTransition = ["transition gauche-droite","transition droite-gauche","transition gauche-gauche","transition droite-droite"]
-listesCartesSlotPattern = ["carte pattern composite","carte pattern vide"]
+listesCartesSlotPattern = ["carte pattern composite","carte pattern enregistrable"]
 
 host = 'http://localhost:3000/card'
 
@@ -26,6 +27,15 @@ class Slot(wx.Panel):
     def __init__(self, parent, label, color, choices, number):
         """Constructor"""
         wx.Panel.__init__(self, parent)
+        try:
+            path = os.path.join(os.path.dirname(__file__),'pics/state.PNG')
+            # image_file = path
+            # bmp1 = wx.Image(image_file, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+            # self.bitmap = wx.StaticBitmap(self, -1, bmp1, (0, 0))
+            
+        except IOError:
+            print ("Image file %s not found" % imageFile)
+            raise SystemExit
         self.SetBackgroundColour(color)
         self.label = label
         self.number = number
@@ -69,7 +79,7 @@ class MainPanel(wx.Panel):
                   ("coral","slot correction",listesCartesSlotEtat),
                   ("cyan","slot état 1",listesCartesSlotEtat+listesCartesSlotPattern+listesCartesSlotInfosMapping),
                   ("red","slot transition",listesCartesSlotTransition),
-                  ("turquoise","slot état 2",listesCartesSlotEtat+listesCartesSlotPattern+listesCartesSlotInfosMapping),
+                  ("cyan","slot état 2",listesCartesSlotEtat+listesCartesSlotPattern+listesCartesSlotInfosMapping),
                   ("pink","slot spécialisation état 1",listesCartesSlotSpecEtat),
                   ("pink","slot spécialisation transition",listesCartesSlotSpecTransition),
                   ("pink","slot spécialisation état 2",listesCartesSlotSpecEtat)]
