@@ -20,9 +20,18 @@ socket.on('notification', (notif) =>{
     notify(notif);
 })
 
-socket.on('cardMapping',(type)=> {
-    resetSelected();
-    greyTransitions();
+socket.on('cardMapping',(card)=> {
+    $("#rotate").css("display","none");
+    if(card){
+        //TODO Griser tous les états sauf celui dont le nom est state.name
+        $("#detach").css("display","block");
+        resetSelected();
+        greyTransitions();
+        console.log(card);
+    }else{
+        resetSelected();
+        greyTransitions();
+    }
 });
 
 socket.on('infos',(infos)=> {
@@ -62,7 +71,9 @@ $(document).ready(function(){
                 width:'70%',
                 height:'70%',
             });
+            $("#rotate").css("display","block");
             $("#rename").css("display","none");
+            $("#detach").css("display","none");
 
             if($(".state",svgRoot).length) {
                 empty(false);
@@ -109,6 +120,7 @@ function resetSelected(){//Remove any selected element status
         $(".state, .transition",svgRoot).children("polygon").attr("fill","black");
         $(".transition",svgRoot).children("polygon").attr("stroke","black");
         $(".transition",svgRoot).children("path").attr("stroke","black");
+        $("#rotate").css("display","block");
     }
 
 }   
@@ -124,7 +136,7 @@ function toggleStateColorAndClass(elem, color, class_ = 'selected') {
     }else{
         console.log("selectionné");
         resetSelected();
-        $("#rename").css("display","");
+        $("#rename").css("display","block");
         colorTextElement(elem.parent(), color);
         elem.parent().addClass(class_);
         select(elem,"state");
@@ -140,7 +152,7 @@ function toggleTransitionColorAndClass(elem, color = "red", class_ = 'selected')
 
     }else{
         resetSelected();
-        $("#rename").css("display","");
+        $("#rename").css("display","block");
         colorTextElement(elem.parent(),color);
         elem.parent().addClass(class_);
         select(elem,"transition");
@@ -267,6 +279,10 @@ function deselect(elem){
 
 function mapCardToState(){
     greyTransitions();
+}
+
+function detach(){
+
 }
 
 function editDialog(){
