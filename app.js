@@ -135,8 +135,8 @@ app.post('/card', (req, res) => {//Carte posée
     if(slot==1){
       if(cardID.includes("mapping")){
         res.send("carte reçue");
-        if(knownCards.get(cardID)){//If already mapped
-          console.log("Carte déjà mappée");
+        if(knownCards.get(cardID)){//If already mapped, need info about the mapped state
+          io.sockets.emit('cardMapping', cardID);
         }else{
           mapping = cardID;
           mapCard(cardID);
@@ -175,7 +175,7 @@ app.post('/card', (req, res) => {//Carte posée
 
     if(slot==4 || slot==6){//slots états
        if((knownCards.has(cardID) && cardID.includes("mapping") )){
-         res.send("état existant");
+        res.send("état existant");
        }else {
         let notif 
         if(cardID.includes("initial")){
@@ -185,8 +185,10 @@ app.post('/card', (req, res) => {//Carte posée
         }else if(cardID.includes("état")){
           addState(cardID, 'regular');
         }else if(cardID.includes("enregistrable")){
-          addPattern(cardID);
-          notif = {title: "Ajout d'un pattern", text: "Le pattern a été ajouté", duration: 3000};
+          if(saveState){
+            addPattern(cardID);
+            notif = {title: "Ajout d'un pattern", text: "Le pattern a été ajouté", duration: 3000};
+          }
         }
         res.send("carte posée sur slot état");
         
@@ -333,7 +335,7 @@ function mapCard(cardID){//Links the mapping card with the state that will be se
   if(diagJSON.states){//If there is at least one state to select
     let notif = {title: "Sélectionner un état", text: "Cliquer sur un état pour le lier à la carte", duration: 3000};
     sendNotification(notif, "true");
-    io.sockets.emit('cardMapping', "état")
+    io.sockets.emit('cardMapping')
   }
 }
 
@@ -362,9 +364,9 @@ function activateCard(slot, cardID){//Tells the client which card was laid and w
       class_ = 'activeState2';
     }
     deactivateElement(diagJSON,class_);
-    // if(!cardID.includes("état")){
-    //   activateElement(diagJSON, activeCards.get(slotString).name, color, class_, nested);
-    // }
+    if(!cardID.includes("état") && !cardID.includes("pattern")){
+      activateElement(diagJSON, activeCards.get(slotString).name, color, class_, nested);
+    }
     renderSVG(diagJSON);
   }
 
@@ -422,10 +424,10 @@ function addNestedState(cardID){
   renderSVG(diagJSON);
 }
 
-function recursiveAvoidSimilarNames(root,names, firstRoot){
+function recursiveAvoidSameNames(root,names, firstRoot){
   for (var i = 0; i < root.states.length; i++){
     if(root.states[i].statemachine != null){
-      recursiveAvoidSimilarNames(root.states[i].statemachine,names, firstRoot);
+      recursiveAvoidSameNames(root.states[i].statemachine,names, firstRoot);
     }
     if(names.includes(root.states[i].name)){
       const oldName = root.states[i].name;
@@ -445,7 +447,7 @@ function recursiveAvoidSimilarNames(root,names, firstRoot){
 
 function addPattern(cardID){
   let diagNames = recursiveGetStateNames(diagJSON);
-  recursiveAvoidSimilarNames(saveState, diagNames, saveState);
+  recursiveAvoidSameNames(saveState, diagNames, saveState);
   diagJSON.states.push(...saveState.states);
   console.log(diagNames);
   //diagJSON.transitions.push(...saveState.transitions);
