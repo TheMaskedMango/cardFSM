@@ -7,6 +7,7 @@ var dialog;
 var selectedElem;
 var notif;
 var greyed = false;
+var mappingCard;
 
 ////////////////////
 //SERVER RECEIVING//
@@ -20,18 +21,20 @@ socket.on('notification', (notif) =>{
     notify(notif);
 })
 
-socket.on('cardMapping',(card)=> {
-    $("#rotate").css("display","none");
+socket.on('cardMapping',(card,stateName)=> {
     if(card){
+        mappingCard = card;
         //TODO Griser tous les états sauf celui dont le nom est state.name
         $("#detach").css("display","block");
+        $("#close").css("display","block");
         resetSelected();
-        greyTransitions();
+        highlightState(stateName);
         console.log(card);
     }else{
         resetSelected();
         greyTransitions();
     }
+    $("#rotate").css("display","none");
 });
 
 socket.on('infos',(infos)=> {
@@ -74,6 +77,7 @@ $(document).ready(function(){
             $("#rotate").css("display","block");
             $("#rename").css("display","none");
             $("#detach").css("display","none");
+            $("#close").css("display","none");
 
             if($(".state",svgRoot).length) {
                 empty(false);
@@ -117,16 +121,15 @@ function resetSelected(){//Remove any selected element status
     $(".state, .transition",svgRoot).children("text").attr("fill","black");
     if(greyed){
         greyed=false;
-        $(".state, .transition",svgRoot).children("polygon").attr("fill","black");
+        $(".transition",svgRoot).children("polygon").attr("fill","black");
         $(".transition",svgRoot).children("polygon").attr("stroke","black");
-        $(".transition",svgRoot).children("path").attr("stroke","black");
+        $(".state, .transition",svgRoot).children("path").attr("stroke","black");
         $("#rotate").css("display","block");
     }
 
 }   
 
 function toggleStateColorAndClass(elem, color, class_ = 'selected') {
-    //console.log(elem);
     if(elem.parent().hasClass(class_)){
         console.log("déselectionné");
         $("#rename").css("display","none");
@@ -199,6 +202,21 @@ function greyTransitions(){
         colorTextElement($(this),"grey");
     });
     greyed=true;
+}
+
+function highlightState(stateName){
+    $(".state.regular polygon",svgRoot).off();
+    console.log(stateName);
+    $(".state.regular",svgRoot).each( function(){
+        if($(this).children("text").html()!=stateName){
+            $(this).children("path").attr("stroke","grey");
+            colorTextElement($(this),"grey");
+        }else{
+            $(this).children("path").attr("stroke","orange");
+            colorTextElement($(this),"orange");
+        }
+    });
+    greyTransitions();
 }
 
 function notify(notification, link= false){
@@ -281,8 +299,26 @@ function mapCardToState(){
     greyTransitions();
 }
 
-function detach(){
+function unlink(){
+    socket.emit("unlink",mappingCard);
+    let notif = {
+        title : "Carte détachée",
+        text : "La carte a été détachée de son état associé",
+        position : 'bottom-center',
+        duration : 3000,
+        close : false
+    }
+    notify(notif, true);
+    closeInfo();
+}
 
+
+function closeInfo(){
+    resetSelected();
+    $("#rotate").css("display","block");
+    $("#detach").css("display","none");
+    $("#close").css("display","none");
+    linkSVG();
 }
 
 function editDialog(){

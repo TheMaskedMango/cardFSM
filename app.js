@@ -4,7 +4,6 @@ const bodyParser = require('body-parser')
 const smcat = require("state-machine-cat");
 const http = require('http');
 const { Server } = require("socket.io"); 
-const { LOADIPHLPAPI } = require("dns");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -108,13 +107,8 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('deselected_name', (name) => {
-    selectedElements.pop(name);
-    //console.log(selectedElements);
-  });
-
-  socket.on('deselected_all', () => {
-    selectedElements = [];
+  socket.on('unlink', (card)=>{
+    unlink(card);
   });
 
 
@@ -136,7 +130,7 @@ app.post('/card', (req, res) => {//Carte posée
       if(cardID.includes("mapping")){
         res.send("carte reçue");
         if(knownCards.get(cardID)){//If already mapped, need info about the mapped state
-          io.sockets.emit('cardMapping', cardID);
+          io.sockets.emit('cardMapping', cardID, knownCards.get(cardID).name);
         }else{
           mapping = cardID;
           mapCard(cardID);
@@ -177,7 +171,8 @@ app.post('/card', (req, res) => {//Carte posée
        if((knownCards.has(cardID) && cardID.includes("mapping") )){
         res.send("état existant");
        }else {
-        let notif 
+        let notif; 
+        notif = {title: "Ajout d'un état", text: "L'état a été ajouté'", duration: 3000};
         if(cardID.includes("initial")){
           addState(cardID, 'initial');
         }else if(cardID.includes("final")){
@@ -430,9 +425,13 @@ function recursiveAvoidSameNames(root,names, firstRoot){
       recursiveAvoidSameNames(root.states[i].statemachine,names, firstRoot);
     }
     if(names.includes(root.states[i].name)){
-      const oldName = root.states[i].name;
-      root.states[i].name += ' (1)';
-      const newName = root.states[i].name;
+      // let name = root.states[i].name;
+      // if(root.states[i].name.match(/\(.*\)/g)){
+      //   root.states[i].name += ' (2)';
+      //   root.states[i].name.replace(/\(.*\)/g,'dazdadad');
+      // }else{
+        root.states[i].name += ' (1)';
+      // }
       // for (var i = 0; i < firstRoot.transitions.length; i++){
       //   if(firstRoot.transitions[i].from==oldName){
       //     firstRoot.transitions[i].from=newName;
@@ -448,8 +447,10 @@ function recursiveAvoidSameNames(root,names, firstRoot){
 function addPattern(cardID){
   let diagNames = recursiveGetStateNames(diagJSON);
   recursiveAvoidSameNames(saveState, diagNames, saveState);
+  console.log(saveState);
   diagJSON.states.push(...saveState.states);
-  console.log(diagNames);
+  saveState = JSON.parse(JSON.stringify(saveState));
+
   //diagJSON.transitions.push(...saveState.transitions);
 
 }
@@ -572,7 +573,6 @@ function addTransition(cardID){
     renderSVG(diagJSON);
   }
 }
-
 
 function setTransitionGuard(cardID, slot, cond = 'condition'){//condition entry exit et slot 4 ou 6
   if(slot==8 && activeCards.get('slot5')!=''){
@@ -725,6 +725,18 @@ function buildTransitionLabel(transition, name, cond, action){//name, cond and a
     transition.action=action;
     transition.label +=' \\'+action;
   }
+}
+
+//Unlink the card parameter from the associated diagJSON state by deleting its entry in the knownCards map. 
+//It also deactivates the state if so.
+function unlink(card){
+  if(recursiveFindStateByName(diagJSON,knownCards.get(card).name).class){
+    knownCards.get(card).class = "";
+    knownCards.get(card).color = "black";
+    renderSVG(diagJSON);
+  }
+  console.log(recursiveFindStateByName(diagJSON,knownCards.get(card).name));
+  knownCards.delete(card);
 }
 
 function sendNotification(notif, addendum = null){
