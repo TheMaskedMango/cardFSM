@@ -6,6 +6,10 @@ It embarks **State Machine Cat** as a statechart renderer.
 
 It is delivered with a card board simulator running in python.
 
+# Files
+
+- Node 16.x
+- Python 3.x
 
 # Requirements
 
@@ -17,38 +21,71 @@ It is delivered with a card board simulator running in python.
 Clone the repo and install the dependencies.
 
 ```bash
-git clone https://github.com/contentful/the-example-app.nodejs.git
-cd the-example-app.nodejs
+git clone https://github.com/TheMaskedMango/cardFSM.git
+cd cardFSM
 ```
 
-Synchronization is one of the biggest features of StackEdit. It enables you to synchronize any file in your workspace with other files stored in your **Google Drive**, your **Dropbox** and your **GitHub** accounts. This allows you to keep writing on other devices, collaborate with people you share the file with, integrate easily into your workflow... The synchronization mechanism takes place every minute in the background, downloading, merging, and uploading file modifications.
-
-There are two types of synchronization and they can complement each other:
-
-- The workspace synchronization will sync all your files, folders and settings automatically. This will allow you to fetch your workspace on any other device.
-	> To start syncing your workspace, just sign in with Google in the menu.
-
-- The file synchronization will keep one file of the workspace synced with one or multiple files in **Google Drive**, **Dropbox** or **GitHub**.
-	> Before starting to sync files, you must link an account in the **Synchronize** sub-menu.
+```bash
+npm install
+```
 
 
-# Publication
+# Getting started
 
-Publishing in StackEdit makes it simple for you to publish online your files. Once you're happy with a file, you can publish it to different hosting platforms like **Blogger**, **Dropbox**, **Gist**, **GitHub**, **Google Drive**, **WordPress** and **Zendesk**. With [Handlebars templates](http://handlebarsjs.com/), you have full control over what you export.
+Start the server with
 
-> Before starting to publish, you must link an account in the **Publish** sub-menu.
+```bash
+node app.js
+```
 
-## Publish a File
+And connect to the graphical interface via [localhost:3000](localhost:3000)
 
-You can publish your file by opening the **Publish** sub-menu and by clicking **Publish to**. For some locations, you can choose between the following formats:
+Start the board simulator in another terminal with
 
-- Markdown: publish the Markdown text on a website that can interpret it (**GitHub** for instance),
-- HTML: publish the file converted to HTML via a Handlebars template (on a blog for example).
+```bash
+py .\pythonBoard\graphicalBoard.py
+```
 
-## Update a publication
+> The system currently works only using the board simulator.
 
-After publishing, StackEdit keeps your file linked to that publication which makes it easy for you to re-publish it. Once you have modified your file and you want to update your publication, click on the **Publish now** button in the navigation bar.
+# Creating Finite State Machines
 
-> **Note:** The **Publish now** button is disabled if your file has not been published yet.
+## Creating states
+
+The creation of elements is made with the 2 blue slots by choosing between initial, final and regular states.
+
+![](./images/doc/addState.png)
 
 
+## Editing elements
+
+The edition is made through the graphical interface by clicking on the element and pressing the edit button.
+
+![](./images/doc/edit.png)
+
+## Creating transitions
+
+### Mapping states
+
+In order to create a transition between 2 states, you need to map them to a card by choosing a card on the mapping slot and clicking the state you want to map on the interface.
+
+![](./images/doc/mapping.png)
+
+### Choosing transition
+
+Once your states are mapped, you can activate them by laying the mapping cards on the states slots and choose the transition you want with the transition slot.
+
+![](./images/doc/transition.png)
+![](./images/doc/transitionInterface.png)
+
+## Specify the elements
+
+You can add *entry* and *exit* actions on **active** states as well as *guard* and *action* on transition with the bottom slots.
+
+## Using patterns
+
+It is possible to encapsulate your diagram in a *compound state* by choosing the card in the pattern slot. 
+
+![](./images/doc/compound.png)
+
+You can edit and map compound state as regular ones.

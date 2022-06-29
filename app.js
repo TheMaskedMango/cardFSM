@@ -1,4 +1,3 @@
-const model = require("./stateMachineModel");
 const express = require('express');
 const bodyParser = require('body-parser')
 const smcat = require("state-machine-cat");
@@ -8,10 +7,9 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-var SVG_String;
-var direction = 'left-right';
-var selectedElements = Array();
-var elemIndex = {initial : 'a', final : 'a', regular : 'a', transition : 'a', nested : 'a'};
+var SVG_String; //Contains the content of the rendered svg in string format
+var direction = 'left-right';//Stores the diagram's orientation 
+var elemIndex = {initial : 'a', final : 'a', regular : 'a', transition : 'a', nested : 'a'};//Used to create elements name (état A; état B..)
 var stateNames=Array();
 var mapping = null;
 var knownCards= new Map();
@@ -67,47 +65,29 @@ var sock;
 /////////////////////////////
 //LISTEN FOR CLIENT ACTIONS//
 /////////////////////////////
-io.on('connection', (socket) => {
+io.on('connection', (socket) => {//When client connects
+  const sock = socket;
   console.log('a user connected');
   renderSVG(diagJSON, socket);
 
-  socket.on('direction', () => {
+  socket.on('direction', () => {//When rotate button clicked
     direction = direction =='left-right' ? 'top-bottom' : 'left-right';
     renderSVG(diagJSON, socket);
   });
 
-  socket.on('delete', (elem, type) => {
+  socket.on('delete', (elem, type) => {//When delete button clicked
     deleteS(elem, type);
   });
 
-  socket.on('rename', (elem, type) => {
+  socket.on('rename', (elem, type) => {//When an element is edited
     renameS(elem, type);
   });
 
-  socket.on('selected', (elem, link) => {//Store the selected element name and type and send the info from the JSON to the client
-    //selectedElements.push(elem.name);
-
-    if(elem.type=='state'){
-      let state = recursiveFindStateByName(diagJSON,elem.name);
-      if(mapping){
-        knownCards.set(mapping, state);
-        mapping=null;
-        let notif = {title: "Carte liée", text: "La carte a été liée à l'état " + elem.name, icon:"success", duration: 3000};
-        sendNotification(notif);
-      }
-      console.log(state);
-      socket.emit("infos",state);
-
-    }else if(elem.type=='transition'){
-      console.log(elem.name);
-      let transition = findTransitionByName(elem.name);
-      socket.emit("infos",transition);
-      console.log(transition);
-      
-    }
+  socket.on('selected', (elem, link) => {//When an element is clicked, stores its name and type and sends the info from the JSON to the client
+    sendInfo(elem, sock);
   });
 
-  socket.on('unlink', (card)=>{
+  socket.on('unlink', (card)=>{//When mapping card needs to be unlinked
     unlink(card);
   });
 
@@ -118,7 +98,7 @@ io.on('connection', (socket) => {
 //LISTEN FOR PHYSICAL ACTIONS//
 ///////////////////////////////
 
-app.post('/card', (req, res) => {//Carte posée
+app.post('/card', (req, res) => {//Card is laid
   const {slot, cardID} = req.body;
   console.log("---------------Carte posée-----------------");
   console.log(req.body);
@@ -126,7 +106,7 @@ app.post('/card', (req, res) => {//Carte posée
   if (cardID && slot) {
 
 
-    if(slot==1){
+    if(slot==1){//Slot info
       if(cardID.includes("mapping")){
         res.send("carte reçue");
         if(knownCards.get(cardID)){//If already mapped, need info about the mapped state
@@ -140,7 +120,7 @@ app.post('/card', (req, res) => {//Carte posée
       }
     }
 
-    if(slot==2){//Carte pattern
+    if(slot==2){//Slot pattern
       if(knownCards.has(cardID)){
         res.send("carte déjà connue");
       }else{
@@ -192,15 +172,18 @@ app.post('/card', (req, res) => {//Carte posée
     }
 
     if (slot==5) {//slot transition
-      addTransition(cardID);
+      checkExistingTransition(cardID);
+      const added = addTransition(cardID);
       console.log(diagJSON);
-      res.send("la transition a été ajoutée");
-      let notif = {
-        title: "Ajout d'une transition",
-        text: "La transition a été ajoutée",
-        duration: 3000
+      res.send("Carte posée sur slot transition");
+      if(added){
+        let notif = {
+          title: "Ajout d'une transition",
+          text: "La transition a été ajoutée",
+          duration: 3000
+        }
+        sendNotification(notif);
       }
-      sendNotification(notif);
     }
 
     if(slot==7 || slot==9){//slots spec état
@@ -238,18 +221,7 @@ app.post('/card', (req, res) => {//Carte posée
 //SERVER-SIDE FUNCTIONS//
 /////////////////////////
 
-// function recursiveFindStateByName(root, name){ //Ancienne version qui bug quand on ajoute des états en dehors du composite
-//   for (var i = 0; i < root.states.length; i++){
-//     if(root.states[i].name==name){
-//       return root.states[i];
-//     }else if(root.states[i].statemachine != null){
-//       return recursiveFindStateByName(root.states[i].statemachine, name);
-//     }
-//   }
-  
-// }
-
-function findTransitionByName(name){
+function findTransitionByName(name){//Find a transition in the JSON of diagram by its name
   for (var i = 0; i < diagJSON.transitions.length; i++){
     if(diagJSON.transitions[i].event==name){
       return diagJSON.transitions[i];
@@ -367,6 +339,7 @@ function activateCard(slot, cardID){//Tells the client which card was laid and w
 
 
   if(slot==5){
+    console.log("AAAAAAAAAAAAAAAAH");
     for (var i = 0; i < diagJSON.transitions.length; i++){
       if(diagJSON.transitions[i].class=='activeTransition'){
         diagJSON.transitions[i].class = '';
@@ -411,8 +384,8 @@ function addNestedState(cardID){
         }
     ]
   };
-  deactivateElement(diagJSON,'activeState1');
-  deactivateElement(diagJSON,'activeState2');
+  //deactivateElement(diagJSON,'activeState1');
+  //deactivateElement(diagJSON,'activeState2');
   diagJSON = newDiag;
   knownCards.set(cardID,newDiag.states[0]);//Unlink all cards from existing states
   elemIndex.nested =((parseInt(elemIndex.nested,36)+1).toString(36)).replace(/0/g,'');//Incrementation of state name 
@@ -520,43 +493,59 @@ function setStateAction(cardID, slot, name='action'){//condition entry exit et s
   renderSVG(diagJSON);
 }
 
+function checkExistingTransition(from,to){
+  for (var i = 0; i < diagJSON.transitions.length; i++){
+    if(diagJSON.transitions[i].from==from){
+      if(diagJSON.transitions[i].to==to){
+        return diagJSON.transitions[i];
+      }
+    }
+  }
+  return false;
+}
+
 function addTransition(cardID){
   let obj;
   let from;
   let to;
   let valid = false;
+  let exists;
 
   switch (cardID) {
     case 'transition gauche-droite':
       if(activeCards.get('slot4')!='' && activeCards.get('slot6')!=''){
         from = activeCards.get('slot4').name;
         to = activeCards.get('slot6').name;
-        valid = true;
       }
       break;
     case 'transition droite-gauche':
       if(activeCards.get('slot4')!='' && activeCards.get('slot6')!=''){
         from = activeCards.get('slot6').name;
         to = activeCards.get('slot4').name;
-        valid = true;
       }
       break;
     case 'transition gauche-gauche':
       if(activeCards.get('slot4')!=''){
         from = activeCards.get('slot4').name;
         to = activeCards.get('slot4').name;
-        valid = true;
       }
       break;
     case 'transition droite-droite':
       if(activeCards.get('slot6')!=''){
         from = activeCards.get('slot6').name;
         to = activeCards.get('slot6').name;
-        valid = true;
       }
       break;
   }
   transitionName = from+"->"+to;
+
+  exists = checkExistingTransition(from,to);
+  if(exists){
+    console.log(exists);
+    knownCards.set(cardID, exists);
+  }else{
+    valid = true;
+  }
   if(valid){
     obj = {
       from: from,
@@ -570,8 +559,10 @@ function addTransition(cardID){
     console.log("------------------------------------------");
     diagJSON["transitions"].push(obj); 
     elemIndex.transition =((parseInt(elemIndex.transition,36)+1).toString(36)).replace(/0/g,''); 
-    renderSVG(diagJSON);
+    
   }
+  renderSVG(diagJSON);
+  return valid;
 }
 
 function setTransitionGuard(cardID, slot, cond = 'condition'){//condition entry exit et slot 4 ou 6
@@ -638,7 +629,6 @@ function deleteS(elem,type){
 function renameS(elem, type){
   if(type=="state"){
     if(!stateNames.includes(elem.newName)){//If the newName does not already exist
-      //console.log(elem)
       let state = recursiveFindStateByName(diagJSON, elem.oldName);
       if(elem.newName){
         state.name = elem.newName;
@@ -657,8 +647,6 @@ function renameS(elem, type){
       if(elem.action2){
         state.actions[1].body=elem.action2;
       }
-      
-      console.log(diagJSON)
     }
   }else if(type=="transition"){
     console.log("--------------elem-------------");
@@ -682,6 +670,27 @@ function renameS(elem, type){
 
   }
   renderSVG(diagJSON);
+}
+
+function sendInfo(elem, sock){
+  if(elem.type=='state'){
+    let state = recursiveFindStateByName(diagJSON,elem.name);
+    if(mapping){
+      knownCards.set(mapping, state);
+      mapping=null;
+      let notif = {title: "Carte liée", text: "La carte a été liée à l'état " + elem.name, icon:"success", duration: 3000};
+      sendNotification(notif);
+    }
+    console.log(state);
+    sock.emit("infos",state);
+
+  }else if(elem.type=='transition'){
+    console.log(elem.name);
+    let transition = findTransitionByName(elem.name);
+    sock.emit("infos",transition);
+    console.log(transition);
+    
+  }
 }
 
 function createTransitionCondition(transition, cond){

@@ -28,7 +28,6 @@ socket.on('cardMapping',(card,stateName)=> {
         $("#close").css("display","block");
         resetSelected();
         highlightState(stateName);
-        console.log(card);
     }else{
         resetSelected();
         greyTransitions();
@@ -52,7 +51,6 @@ function renderSVG(socket, svgString){//Parse the svg then displays it
 }
 
 function displaySVG(xmlDoc){//Insert the svg element in the HTML
-    console.log(xmlDoc.childNodes[3]);
     let div = document.getElementById("svgContainer");
     div.replaceChild(xmlDoc.childNodes[3], div.firstChild);
 }
@@ -87,14 +85,16 @@ function displaySVG(xmlDoc){//Insert the svg element in the HTML
 
             clearListeners();
             $(".state.regular polygon",svgRoot).click(function() {//Listeners states
-                console.log($(this).parent().children("title").html());
+                toggleStateColorAndClass($(this),"blue");
+            });
+
+            $(".state.initial ellipse, .state.final ellipse",svgRoot).click(function() {//Listeners states
                 toggleStateColorAndClass($(this),"blue");
             });
 
             //Ajouter des listeners pour les états initial et final, sur le premier attribut ellipse
 
             $(".cluster text",svgRoot).click(function() {//Listeners nested (composite) states
-                console.log($(this).parent().children("title").html());
                 toggleStateColorAndClass($(this),"green");
             });
             
@@ -105,10 +105,7 @@ function displaySVG(xmlDoc){//Insert the svg element in the HTML
                 toggleTransitionColorAndClass($(this),"red");
             });
             markActivated();
-
-            console.log("Images chargées");
        }else{
-            console.log("Chargement du diagramme..")
        }
     }, 100);
 }
@@ -123,6 +120,8 @@ function resetSelected(){//Remove any selected element status and set the colors
         $(".transition",svgRoot).children("polygon").attr("fill","black");
         $(".transition",svgRoot).children("polygon").attr("stroke","black");
         $(".state, .transition",svgRoot).children("path").attr("stroke","black");
+        $(".state",svgRoot).children("ellipse").attr("stroke","black");
+        $(".initial ellipse, .final ellipse:nth-child(2)",svgRoot).attr("fill","black");
         $("#rotate").css("display","block");
     }
 
@@ -130,13 +129,11 @@ function resetSelected(){//Remove any selected element status and set the colors
 
 function toggleStateColorAndClass(elem, color, class_ = 'selected') {//Select or deselect a state by changing its color and class
     if(elem.parent().hasClass(class_)){
-        console.log("déselectionné");
         $("#rename").css("display","none");
         elem.parent().children("text").attr("fill","black");
         elem.parent().removeClass(class_);
         deselect(elem);
     }else{
-        console.log("selectionné");
         resetSelected();
         $("#rename").css("display","block");
         colorTextElement(elem.parent(), color);
@@ -204,8 +201,7 @@ function greyTransitions(){//Grey all transitions of the diagram
 }
 
 function highlightState(stateName){//Highlight a particular state by making it orange and greying all other elements
-    $(".state.regular polygon",svgRoot).off();
-    console.log(stateName);
+    clearListeners();
     $(".state.regular",svgRoot).each( function(){
         if($(this).children("text").html()!=stateName){
             $(this).children("path").attr("stroke","grey");
@@ -213,6 +209,15 @@ function highlightState(stateName){//Highlight a particular state by making it o
         }else{
             $(this).children("path").attr("stroke","orange");
             colorTextElement($(this),"orange");
+        }
+    });
+    $(".state.initial, .state.final",svgRoot).each( function(){
+        if($(this).children("title").html()!=stateName){
+            $(this).children("ellipse").attr("fill","grey");
+            $(this).children("ellipse").attr("stroke","grey");
+        }else{
+            $(this).children("ellipse").attr("stroke","orange");
+            $(this).children("ellipse").attr("fill","orange");
         }
     });
     greyTransitions();
@@ -254,7 +259,6 @@ function empty(isEmpty){
 }
 
 function download(){//Download the displayed svg in SVG format (working but not implemented yet)
-    console.log(svgRoot)
     var svgData = svgRoot[0].outerHTML.replace(/&nbsp;/g,"")
     var svgBlob = new Blob([svgData], {type:"image/svg+xml;charset=utf-8"});
     var svgUrl = URL.createObjectURL(svgBlob);
@@ -272,9 +276,12 @@ function download(){//Download the displayed svg in SVG format (working but not 
 
 //Send the selected name to the server which saves it in an array
 function select(elem, type){
-    let name = elem.parent().children("text").html();
+    let name;
     if(type=='transition'){
+        name = elem.parent().children("text").html();
         name = name.replace(/&nbsp;/g, '').replace(/\[.*\]/g, '').replace(/\\.*/g, '').trim();
+    }else{
+        name = elem.parent().children("title").html();
     }
     let obj={
         name: name,
@@ -388,8 +395,8 @@ function rename(){//Renames the selected element
     let elem = {
         oldName: '',
         newName: undefined,
-        action1 : undefined,
-        action2 : undefined,
+        action1: undefined,
+        action2: undefined, 
         cond : undefined,
         action : undefined,
     }
@@ -403,15 +410,14 @@ function rename(){//Renames the selected element
         }
 
         if(selectedElem.actions){
-            if(newAction1!=selectedElem.actions[0] && newAction1!==null){//Changing state first action
+            if(newAction1!==selectedElem.actions[0] && newAction1!==''){//Changing state first action
                 elem.action1 = newAction1;
             }
 
-            if(newAction2!=selectedElem.actions[1] && newAction2!==null){//Changing state second action
+            if(newAction2!==selectedElem.actions[1] && newAction2!==''){//Changing state second action
                 elem.action2 = newAction2;
             }
         }
-
         socket.emit('rename',elem, "state");//Sending request to server
         linkSVG();
 
@@ -429,7 +435,6 @@ function rename(){//Renames the selected element
         if(selectedElem.action){
             elem.action=$("#input3").val();
         }
-        console.log(elem);
         socket.emit('rename',elem, "transition");
         linkSVG();
     }
@@ -439,9 +444,9 @@ function rename(){//Renames the selected element
 
 function clearListeners(){//Remove the click listeners to free memory
     $(".state.regular polygon",svgRoot).off();
+    $(".state.initial ellipse",svgRoot).off();
     $(".transition polygon",svgRoot).off();
     $(".cluster text",svgRoot).off();
-    console.log("listeners supprimés");
 }
 
 function changeDirection(){//Rotates the display
