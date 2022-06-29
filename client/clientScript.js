@@ -13,18 +13,17 @@ var mappingCard;
 //SERVER RECEIVING//
 ////////////////////
 
-socket.on('svg', (svg) => {//Listening on socket
-    renderSVG(socket,svg);
+socket.on('svg', (svg) => {//Listening on socket for SVG image
+    renderSVG(socket,svg);//Actualizes the diagram with the new SVG
 });
 
 socket.on('notification', (notif) =>{
-    notify(notif);
+    notify(notif);//Creates a graphical toast notification on screen
 })
 
 socket.on('cardMapping',(card,stateName)=> {
     if(card){
         mappingCard = card;
-        //TODO Griser tous les états sauf celui dont le nom est state.name
         $("#detach").css("display","block");
         $("#close").css("display","block");
         resetSelected();
@@ -38,12 +37,13 @@ socket.on('cardMapping',(card,stateName)=> {
 });
 
 socket.on('infos',(infos)=> {
-    selectedElem=infos;
+    selectedElem=infos;//Get infos of the selected element (if it's a state, its name, type, class etc..)
 });
 
 ////////////////////
 //CLIENT FUNCTIONS//
 ////////////////////
+
 function renderSVG(socket, svgString){//Parse the svg then displays it
     parser = new DOMParser();
     xmlDoc = parser.parseFromString(svgString, "image/svg+xml");
@@ -57,12 +57,9 @@ function displaySVG(xmlDoc){//Insert the svg element in the HTML
     div.replaceChild(xmlDoc.childNodes[3], div.firstChild);
 }
 
-$(document).ready(function(){
-    //linkSVG();
- });
-
  function linkSVG(){//Processes the svg and add listeners on it
-    //Wait until the svg loads
+    //Wait until the svg loads because it is loaded asynchronously
+
     var checkExist = setInterval(function() {
        if ($('svg').length) {
             clearInterval(checkExist);
@@ -74,11 +71,14 @@ $(document).ready(function(){
                 width:'70%',
                 height:'70%',
             });
+
+            //Default display options for buttons
             $("#rotate").css("display","block");
             $("#rename").css("display","none");
             $("#detach").css("display","none");
             $("#close").css("display","none");
 
+            //Checks if diagram is empty
             if($(".state",svgRoot).length) {
                 empty(false);
             }else{
@@ -111,10 +111,9 @@ $(document).ready(function(){
             console.log("Chargement du diagramme..")
        }
     }, 100);
-   //the svg doc is loaded asynchronouslys
 }
 
-function resetSelected(){//Remove any selected element status
+function resetSelected(){//Remove any selected element status and set the colors and classes to default
     deselect();
     $("#rename").css("display","none");
     $(".state, .transition",svgRoot).removeClass("selected");
@@ -129,7 +128,7 @@ function resetSelected(){//Remove any selected element status
 
 }   
 
-function toggleStateColorAndClass(elem, color, class_ = 'selected') {
+function toggleStateColorAndClass(elem, color, class_ = 'selected') {//Select or deselect a state by changing its color and class
     if(elem.parent().hasClass(class_)){
         console.log("déselectionné");
         $("#rename").css("display","none");
@@ -146,7 +145,7 @@ function toggleStateColorAndClass(elem, color, class_ = 'selected') {
     }
 }
 
-function toggleTransitionColorAndClass(elem, color = "red", class_ = 'selected') {
+function toggleTransitionColorAndClass(elem, color = "red", class_ = 'selected') {//Select or deselect a transition by changing its color and class
     if(elem.parent().hasClass(class_)){//If already selected
         colorTextElement(elem.parent(),"black");
         elem.parent().removeClass(class_);
@@ -162,12 +161,12 @@ function toggleTransitionColorAndClass(elem, color = "red", class_ = 'selected')
     }
 }
 
-function colorTextElement(elem,color="blue"){
+function colorTextElement(elem,color="blue"){//Color text element of transition or state
     elem.children("text").attr("fill",color);
 }
 
 
-function markActivated(){
+function markActivated(){//Displays the indicators on the top-right cards
     let stateLeft = $('.activeState1').children("title").html() ? $('.activeState1').children("title").html():'' ;
     let stateRight = $('.activeState2').children("title").html() ? $('.activeState2').children("title").html():'';
     let transition = $('.activeTransition').children("title").html() ;
@@ -193,7 +192,7 @@ function markActivated(){
     }
 }
 
-function greyTransitions(){
+function greyTransitions(){//Grey all transitions of the diagram
     $(".transition polygon",svgRoot).off();//Prevent from clicking on a transition
     $(".transition",svgRoot).each( function(){
         $(this).children("polygon").attr("fill","grey");
@@ -204,7 +203,7 @@ function greyTransitions(){
     greyed=true;
 }
 
-function highlightState(stateName){
+function highlightState(stateName){//Highlight a particular state by making it orange and greying all other elements
     $(".state.regular polygon",svgRoot).off();
     console.log(stateName);
     $(".state.regular",svgRoot).each( function(){
@@ -219,7 +218,7 @@ function highlightState(stateName){
     greyTransitions();
 }
 
-function notify(notification, link= false){
+function notify(notification, link= false){//Create the toast notification from the object passed in parameter
     let notifObj = {
         heading: notification.title,
         text: notification.text,
@@ -254,7 +253,7 @@ function empty(isEmpty){
     }
 }
 
-function download(){//Download the displayed svg in SVG format
+function download(){//Download the displayed svg in SVG format (working but not implemented yet)
     console.log(svgRoot)
     var svgData = svgRoot[0].outerHTML.replace(/&nbsp;/g,"")
     var svgBlob = new Blob([svgData], {type:"image/svg+xml;charset=utf-8"});
@@ -294,12 +293,7 @@ function deselect(elem){
         socket.emit('deselected_name',name);
     }
 }
-
-function mapCardToState(){
-    greyTransitions();
-}
-
-function unlink(){
+function unlink(){//Tells the server to unlink the current mapping card from the state it's attached to
     socket.emit("unlink",mappingCard);
     let notif = {
         title : "Carte détachée",
@@ -313,7 +307,7 @@ function unlink(){
 }
 
 
-function closeInfo(){
+function closeInfo(){//Closes the info buttons
     resetSelected();
     $("#rotate").css("display","block");
     $("#detach").css("display","none");
@@ -321,9 +315,10 @@ function closeInfo(){
     linkSVG();
 }
 
-function editDialog(){
+function editDialog(){//Prepares the dialog box for when clicking on the edit button
     let oldName;
     let height = 400;
+    //Shows or hides inputs depending on selected elem infos
     if(selectedType=="state"){
 
         oldName = $(".selected").children("text").html()
@@ -366,7 +361,7 @@ function editDialog(){
         
     }
 
-
+    //Creates the dialog box
     $("#name").val(oldName);
     dialog= $( "#dialog" ).dialog({
         height: height,
@@ -375,9 +370,6 @@ function editDialog(){
         buttons: {
             "Supprimer": deleteElem,
             "Appliquer": rename,
-            // "Annuler": function() {
-            // dialog.dialog( "close" );
-            // }
         },
         close: function() {
             resetSelected();
@@ -452,7 +444,7 @@ function clearListeners(){//Remove the click listeners to free memory
     console.log("listeners supprimés");
 }
 
-function changeDirection(){
+function changeDirection(){//Rotates the display
     clearListeners();
     socket.emit('direction');
     linkSVG();
