@@ -323,18 +323,17 @@ function activateCard(slot, cardID){
     let nested = false;
     let slotString;
     let class_;
-    if(cardID.includes("pattern")){
-      if(cardID=="carte pattern composite"){
-        color="green";
-        nested = true;
-      }
-    }
     if(slot==4){
       slotString = 'slot4';
       class_ = 'activeState1';
     }else{
       slotString = 'slot6';
       class_ = 'activeState2';
+    }
+    console.log(activeCards.get(slotString));
+    if(activeCards.get(slotString).statemachine){
+      color="green";
+      nested = true;
     }
     deactivateElement(diagJSON,class_);
     if(!cardID.includes("état") && !cardID.includes("pattern")){
@@ -679,7 +678,6 @@ function sendInfo(elem, sock){
       sendNotification(notif);
     }
     sock.emit("infos",state);
-    console.log(elem);
   }else if(elem.type=='transition'){
     let transition = findTransitionByName(elem.name);
     sock.emit("infos",transition);
