@@ -2,7 +2,7 @@ import wx
 import requests
 import os
 
-#listesCartesSlotEtat = ["carte état initial","carte état final","carte état test","carte état 1","carte état 2","carte état 3","carte état 4"]
+#List of cards used in the different slots
 listesCartesSlotEtat = ["carte état initial","carte état final","carte état"]
 listesCartesSlotInfosMapping = ["carte mapping", "carte mapping 2"]
 listesCartesSlotSpecEtat = ["carte entry","carte exit"]
@@ -13,29 +13,20 @@ listesCartesSlotPattern = ["carte pattern composite","carte pattern enregistrabl
 host = 'http://localhost:3000/card'
 
 
-
+#Function used to send the card info to the nodeJs server
 def sendServer(slot,info):
     data = {'slot': slot, 'cardID': info}
     print(data)
     r = requests.post(host, data)
     print(r.text)
 
-
+#Graphical slot definition
 class Slot(wx.Panel):
 
     #----------------------------------------------------------------------
     def __init__(self, parent, label, color, choices, number):
         """Constructor"""
         wx.Panel.__init__(self, parent)
-        try:
-            path = os.path.join(os.path.dirname(__file__),'pics/state.PNG')
-            # image_file = path
-            # bmp1 = wx.Image(image_file, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
-            # self.bitmap = wx.StaticBitmap(self, -1, bmp1, (0, 0))
-            
-        except IOError:
-            print ("Image file %s not found" % imageFile)
-            raise SystemExit
         self.SetBackgroundColour(color)
         self.label = label
         self.number = number
@@ -70,10 +61,6 @@ class MainPanel(wx.Panel):
         """Constructor"""
         wx.Panel.__init__(self, parent)
 
-        hsizer = wx.BoxSizer(wx.HORIZONTAL)
-        hsizer2 = wx.BoxSizer(wx.HORIZONTAL)
-        v_sizer = wx.BoxSizer(wx.VERTICAL)
-
         slots = [("plum","slot infos/mapping",listesCartesSlotInfosMapping),
                   ("green","slot pattern",listesCartesSlotPattern),
                   ("coral","slot correction",listesCartesSlotEtat),
@@ -84,24 +71,14 @@ class MainPanel(wx.Panel):
                   ("pink","slot spécialisation transition",listesCartesSlotSpecTransition),
                   ("pink","slot spécialisation état 2",listesCartesSlotSpecEtat)]
 
-        #p = wx.Panel(self) 
-         
+        #Slots in a grid of 3x3
         gs = wx.GridSizer(3, 3, 5, 5) 
 		
-        #for i in range(1,10): 
-            #btn = "Btn"+str(i) 
-            #gs.Add(wx.Button(self,label = btn),0,wx.EXPAND) 
-
-            #p.SetSizer(gs)
         number = 1
         for color, label, choix in slots:
             panel = Slot(self, label, color, choix, number)
             gs.Add(panel, 1, wx.EXPAND)
             number=number+1
-
-
-
-
 
         self.SetSizer(gs)
 
@@ -113,7 +90,7 @@ class MainFrame(wx.Frame):
     def __init__(self):
         """Constructor"""
         wx.Frame.__init__(self, None, title="cardSFM Board", size=(600,600))
-        panel = MainPanel(self)
+        MainPanel(self)
         self.Show()
 
 #----------------------------------------------------------------------
