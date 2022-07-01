@@ -1,6 +1,6 @@
 var svgRoot;
 var socket = io();
-var direction = "top-bottom";//demande au serv bouffon
+var direction = "top-bottom";
 var selectedType;
 var slot=Array();
 var dialog;
@@ -281,7 +281,7 @@ function select(elem, type){
         name = elem.parent().children("text").html();
         name = name.replace(/&nbsp;/g, '').replace(/\[.*\]/g, '').replace(/\\.*/g, '').trim();
     }else{
-        name = elem.parent().children("title").html();
+        name = elem.parent().children("title").html().replace(/cluster_/g, '');
     }
     let obj={
         name: name,

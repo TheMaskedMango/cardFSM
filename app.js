@@ -174,7 +174,6 @@ app.post('/card', (req, res) => {//Card is laid
     if (slot==5) {//slot transition
       checkExistingTransition(cardID);
       const added = addTransition(cardID);
-      console.log(diagJSON);
       res.send("Carte posée sur slot transition");
       if(added){
         let notif = {
@@ -221,14 +220,15 @@ app.post('/card', (req, res) => {//Card is laid
 //SERVER-SIDE FUNCTIONS//
 /////////////////////////
 
-function findTransitionByName(name){//Find a transition in the JSON of diagram by its name
+//Find a transition in the JSON of diagram by its name
+function findTransitionByName(name){
   for (var i = 0; i < diagJSON.transitions.length; i++){
     if(diagJSON.transitions[i].event==name){
       return diagJSON.transitions[i];
     }
   }
 }
-
+//Find a state recursively (search through compound states) by its name
 function recursiveFindStateByName(root, name, deleting = false){
   for (var i = 0; i < root.states.length; i++){
     if(root.states[i].name==name){
@@ -248,6 +248,7 @@ function recursiveFindStateByName(root, name, deleting = false){
   }
 }
 
+//Return the names of all states in the diagram
 function recursiveGetStateNames(root){
   let stateNames = Array();
   for (var i = 0; i < root.states.length; i++){
@@ -259,6 +260,7 @@ function recursiveGetStateNames(root){
   return stateNames;
 }
 
+//Find a state recursively (search through compound states) by its class
 function recursiveFindStateByClass(root, className){
   for (var i = 0; i < root.states.length; i++){
     if(root.states[i].class==className){
@@ -272,7 +274,8 @@ function recursiveFindStateByClass(root, className){
   }
 }
 
-function activateElement(root, name, color, className, nested = false){//Colors the border of the active state and adds them the active class
+//Colors the border of the active state and adds them the active class
+function activateElement(root, name, color, className, nested = false){
   let elem = recursiveFindStateByName(root,name);
   if(nested){
     for (let i = 0; i < elem.statemachine.states.length; i++) {
@@ -285,7 +288,8 @@ function activateElement(root, name, color, className, nested = false){//Colors 
 
 }
 
-function deactivateElement(root, className){//Removes the previous colored border and class
+//Removes the previous colored border and class
+function deactivateElement(root, className){
   let elem = recursiveFindStateByClass(root, className);
   if(elem){
     if(elem.statemachine){
@@ -298,7 +302,8 @@ function deactivateElement(root, className){//Removes the previous colored borde
   }
 }
 
-function mapCard(cardID){//Links the mapping card with the state that will be selected
+//Links the mapping card with the state that will be selected
+function mapCard(cardID){
   if(diagJSON.states){//If there is at least one state to select
     let notif = {title: "Sélectionner un état", text: "Cliquer sur un état pour le lier à la carte", duration: 3000};
     sendNotification(notif, "true");
@@ -306,7 +311,8 @@ function mapCard(cardID){//Links the mapping card with the state that will be se
   }
 }
 
-function activateCard(slot, cardID){//Tells the client which card was laid and where
+//Tells the client which card was laid and where
+function activateCard(slot, cardID){
   activeCards.set('slot'+slot,knownCards.get(cardID));
   console.log("--------------activeCards---------------");
   console.log(activeCards);
@@ -339,7 +345,6 @@ function activateCard(slot, cardID){//Tells the client which card was laid and w
 
 
   if(slot==5){
-    console.log("AAAAAAAAAAAAAAAAH");
     for (var i = 0; i < diagJSON.transitions.length; i++){
       if(diagJSON.transitions[i].class=='activeTransition'){
         diagJSON.transitions[i].class = '';
@@ -366,7 +371,6 @@ function renderSVG(source, socket = io.sockets){
 
 function saveDiagProgress(){
   saveState = JSON.parse(JSON.stringify(diagJSON));//Used to clone the diagram
-  console.log(diagJSON);
 }
 
 function addNestedState(cardID){
@@ -391,6 +395,7 @@ function addNestedState(cardID){
   elemIndex.nested =((parseInt(elemIndex.nested,36)+1).toString(36)).replace(/0/g,'');//Incrementation of state name 
   renderSVG(diagJSON);
 }
+
 
 function recursiveAvoidSameNames(root,names, firstRoot){
   for (var i = 0; i < root.states.length; i++){
@@ -420,7 +425,6 @@ function recursiveAvoidSameNames(root,names, firstRoot){
 function addPattern(cardID){
   let diagNames = recursiveGetStateNames(diagJSON);
   recursiveAvoidSameNames(saveState, diagNames, saveState);
-  console.log(saveState);
   diagJSON.states.push(...saveState.states);
   saveState = JSON.parse(JSON.stringify(saveState));
 
@@ -444,7 +448,6 @@ function addState(cardID, type){//Add a new state in the diagram
   }
   stateNames.push(obj.name);
   knownCards.set(cardID, obj);
-  console.log(knownCards);
   diagJSON["states"].push(obj);
   elemIndex[type] =((parseInt(elemIndex[type],36)+1).toString(36)).replace(/0/g,'');//Incrementation of state name 
   renderSVG(diagJSON);
@@ -480,7 +483,6 @@ function setStateAction(cardID, slot, name='action'){//condition entry exit et s
   }else if(slot==9 && activeCards.get('slot6')!=''){
     state = recursiveFindStateByName(diagJSON,activeCards.get('slot6').name); 
   }
-  console.log(state)
   if(state && !state.statemachine){
     if(state.actions == undefined){
       state.actions= action;
@@ -541,7 +543,6 @@ function addTransition(cardID){
 
   exists = checkExistingTransition(from,to);
   if(exists){
-    console.log(exists);
     knownCards.set(cardID, exists);
   }else{
     valid = true;
@@ -599,7 +600,6 @@ function deleteAssociatedTransitions(stateName){
 function deleteS(elem,type){
   
   if(type=="state"){
-    console.log(elem.name);
     recursiveFindStateByName(diagJSON, elem.name, true);
     if(elem.statemachine){
       elem.statemachine.states.forEach((state) => {
@@ -612,7 +612,6 @@ function deleteS(elem,type){
         knownCards.delete(key);
       }
     });
-    console.log(knownCards)
 
   }else if(type=="transition"){
     for (var i = 0; i < diagJSON.transitions.length; i++){
@@ -620,9 +619,7 @@ function deleteS(elem,type){
         diagJSON.transitions.splice(i,1);
       }
     } 
-    console.log(elem);
   }
-  console.log(diagJSON)
   renderSVG(diagJSON);
 }
 
@@ -681,15 +678,12 @@ function sendInfo(elem, sock){
       let notif = {title: "Carte liée", text: "La carte a été liée à l'état " + elem.name, icon:"success", duration: 3000};
       sendNotification(notif);
     }
-    console.log(state);
     sock.emit("infos",state);
-
+    console.log(elem);
   }else if(elem.type=='transition'){
-    console.log(elem.name);
     let transition = findTransitionByName(elem.name);
     sock.emit("infos",transition);
-    console.log(transition);
-    
+
   }
 }
 
@@ -744,7 +738,6 @@ function unlink(card){
     knownCards.get(card).color = "black";
     renderSVG(diagJSON);
   }
-  console.log(recursiveFindStateByName(diagJSON,knownCards.get(card).name));
   knownCards.delete(card);
 }
 
